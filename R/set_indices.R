@@ -106,8 +106,8 @@ set_indices = function(input, index_info=NULL) {
     input$index_names <- paste0("Index ", 1:data$n_indices)
 	}
 
-	if(!is.null(index_info$use_indices)) data$use_indices[] = index_opts$use_indices
-	if(!is.null(index_info$use_index_paa)) data$use_index_paa[] = index_opts$use_index_paa
+	if(!is.null(index_info$use_indices)) data$use_indices[] = index_info$use_indices
+	if(!is.null(index_info$use_index_paa)) data$use_index_paa[] = index_info$use_index_paa
 	if(!is.null(index_info$units_indices)) data$units_indices[] = index_info$units_indices
 	if(!is.null(index_info$fracyr_indices)) data$fracyr_indices[] = index_info$fracyr_indices
 	if(!is.null(index_info$agg_indices)) data$agg_indices[] = index_info$agg_indices
