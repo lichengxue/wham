@@ -1,7 +1,24 @@
-# Function to update F (given catch advice) in the OM and re-generate data given the updated F
-update_om_fn = function(om, 
-                        interval.info = NULL,
+#' Update the operating model and generate data
+#' 
+#' Function to update F in the operating model (see \code{\link{update_om_F}}) and generate data given the updated F.
+#' 
+#' @param om Operating model 
+#' @param interval.info Catch advice for a number of years projected from the estimation model
+#'   \itemize{
+#'     \item \code{"$years"} projection years 
+#'     \item \code{"$catch"} matrix (n_region x n_years) projected catch 
+#'     \item \code{"=NULL"} generate data in the OM
+#'     }
+#'     
+#' @return an operating model with simulated data and updated F time series
+#'   
+#' @export
+#'
+#' @seealso \code{\link{update_om_F}}
+#' 
+update_om_fn = function(om, interval.info = NULL,
                         seed = 123) {
+  
   obs_names = c("agg_indices","agg_catch","catch_paa","index_paa", "Ecov_obs", "obsvec")
   
   if(!is.null(interval.info)){ #iteratively update F over assessment interval for the given catch advice

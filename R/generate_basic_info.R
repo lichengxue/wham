@@ -1,4 +1,65 @@
-# Function to generate basic biological and fishery information for MSE
+#' Generate basic information for multi-wham input
+#' 
+#' The generate_basic_info() function is used to generate biological and fishery information for 
+#' simulation-estimation work and management strategy evaluation. 
+#' Note that not all information is included here. More details can be found in \code{\link{prepare_wham_input}}
+#' 
+#' @param n_stocks Number of stocks
+#' @param n_regions Number of regions 
+#' @param n_indices Number of indices
+#' @param n_fleets Number of fleets
+#' @param n_seasons Number of seasons
+#' @param base.years Model years (or "burn-in" period in MSE)
+#' @param n_feedback_years (optional) Number of years in the MSE feedback loop
+#' @param life_history Fish life history (parameters are obtained from \href{https://doi.org/10.1139/cjfas-2016-0381}{Wiedenmann et al. 2017}):
+#'   \itemize{
+#'     \item \code{"median"} median-lived species (default)
+#'     \item \code{"short"} short-lived species
+#'     \item \code{"long"} long-lived species
+#'     }
+#' @param n_ages Number of ages 
+#' @param Fbar_ages Ages to use to average total F at age defining fully selected F for reference points.
+#' @param recruit_model Option to specify stock-recruit model
+#'   \itemize{
+#'     \item \code{1} {SCAA (without NAA_re option specified) or Random walk (if NAA_re$sigma specified), i.e. predicted recruitment in year i = recruitment in year i-1}
+#'     \item \code{2} {(default) Random about mean, i.e. steepness = 1}
+#'     \item \code{3} {Beverton-Holt}
+#'     \item \code{4} {Ricker}
+#'   }
+#' @param q Survey catchability
+#' @param F_info Historical fishing pressure
+#'   \itemize{
+#'     \item \code{$F.year1} fishing mortality in the first year
+#'     \item \code{$Fhist}: \cr
+#'     {"constant"} = constant across years \cr
+#'     {"updown"}   = increase from F.year1 to F.year1+0.2 and decrease to F.year1 \cr
+#'     {"downup"}   = decrease from F.year1 to F.year1-0.2 and increase to F.year1 \cr
+#'     {"Fmsy-H-L"} = 2.5xFmsy in the 1st half and Fmsy in the 2nd half
+#'     }
+#' @param catch_info Fleet information
+#'   \itemize{
+#'     \item \code{$catch_cv} cv for the catch
+#'     \item \code{$catch_Neff} effective sample size for the catch
+#'     }
+#' @param index_info Survey information (see details)
+#'   \itemize{
+#'     \item \code{$index_cv} cv for the indices
+#'     \item \code{$index_Neff} effective sample size for the indices
+#'     \item \code{$fracyr_indices} fraction of the year when survey is conducted
+#'     }
+#' @param fracyr_spawn Fraction of the year when spawning occurs
+#' @param bias.correct.process T/F process error is bias corrected
+#' @param bias.correct.observation T/F observation error is bias corrected
+#' @param bias.correct.BRPs T/F biological reference point is bias corrected
+#' @param mig_type 0 = migration after survival, 1 = movement and mortality simultaneous
+#' 
+#' @return A list of information that will be used to prepare wham input
+#'
+#' @export
+#'
+#' @seealso \code{\link{prepare_wham_input}}
+#'
+
 generate_basic_info <- function(n_stocks = 2, 
                                 n_regions = 2, 
                                 n_indices = 2, 
@@ -8,22 +69,17 @@ generate_basic_info <- function(n_stocks = 2,
                                 n_feedback_years = 0,
                                 life_history = "medium",
                                 n_ages = 12, 
+                                Fbar_ages = 12, 
                                 recruit_model = 2, 
                                 q = 0.2, 
-                                F.config = 2,
-                                F.year1 = 0.3958467,
-                                Fhist = "Fmsy-H-L",
-                                Fbar_ages = (n_ages-2):n_ages, 
-                                catch_cv = 0.1, 
-                                catch_Neff = 200, 
-                                index_cv = 0.2, 
-                                index_Neff = 100,
-                                fracyr_indices = 0.5, 
+                                F_info = list(F.year1 = 0.2, Fhist = "constant"),
+                                catch_info = list(catch_cv = 0.1,catch_Neff = 200),
+                                index_info = list(index_cv = 0.2,index_Neff = 100, fracyr_indices = 0.5),
                                 fracyr_spawn = 0.5,
                                 bias.correct.process = FALSE,
                                 bias.correct.observation = FALSE,
-                                bias.correct.BRPs = FALSE
-                                #XSPR.R.opt = 4
+                                bias.correct.BRPs = FALSE,
+                                mig_type = 0
                                 ) {
   
   check_dimensions <- function(...){
@@ -37,8 +93,7 @@ generate_basic_info <- function(n_stocks = 2,
   basic_info$bias_correct_process = bias.correct.process
   basic_info$bias_correct_observation = bias.correct.observation
   basic_info$bias_correct_BRPs = bias.correct.BRPs
-  #basic_info$XSPR_R_opt = XSPR.R.opt
-  basic_info$mig_type = 0 # 0:mortality and movement separate,  1:mortality and movement simultaneous (no way to calculate brps!)
+  basic_info$mig_type = 0 # 0:mortality and movement separate,  1:mortality and movement simultaneous
   
   basic_info$years = as.integer(base.years[1] - 1 + 1:(length(base.years) + n_feedback_years))
   basic_info$ages = as.integer(1:n_ages)
@@ -61,10 +116,41 @@ generate_basic_info <- function(n_stocks = 2,
   basic_info$fracyr_spawn = rep(fracyr_spawn,n_stocks)
   basic_info$spawn_regions = rep(1:n_stocks)
   
-  basic_info$fracyr_indices = matrix(NA, length(basic_info$years), n_indices)
-  for (s in 1:n_stocks) basic_info$fracyr_indices[,s] = fracyr_indices # temporarily assume 1 survey in each region/stock and same survey time
-  
   basic_info$q <- rep(q, n_indices)
+  
+  # Fishing mortality 
+  nby <- length(base.years)
+  if (is.null(F_info)) {
+    F = matrix(0.2, nby, n_fleets)
+  } else {
+    if(is.null(F_info$F.year1)) stop("Users must specify initial F!")
+    F.year1 = F_info$F.year1
+    if(F_info$Fhist == "constant") {
+      F = matrix(F.year1, nby, n_fleets)
+    }
+    if(F_info$Fhist == "updown") {
+      mid <- floor(nby/2)
+      F = matrix(F.year1 + c(seq(0,0.2,length.out = mid),seq(0.2,0,length.out=nby-mid)),nby, n_fleets)
+    } 
+    if(F_info$Fhist == "downup") {
+      mid <- floor(nby/2)
+      F = matrix(F.year1 + c(seq(0,-0.2,length.out = mid),seq(-0.2,0,length.out=nby-mid)),nby, n_fleets)
+    } 
+    if(F_info$Fhist == "Fmsy-H-L") {
+      year_change <- floor(nby * 0.5)
+      max_mult = 2.5; min_mult = 1
+      F <- matrix(F.year1*min_mult,nby, n_fleets)
+      F[1:year_change,] = F.year1*max_mult
+    }
+  }
+  if(n_feedback_years>0) F <- rbind(F, F[rep(nby, n_feedback_years),, drop = F])
+  basic_info$F_opts = list(F = F, F_config = 2)
+  
+  if(is.null(Fbar_ages)) {
+    basic_info$Fbar_ages = as.integer(na)
+  } else {
+    basic_info$Fbar_ages = as.integer(Fbar_ages)
+  }
   
   # MAA
   maturity <- Generate_Maturity(life_history = life_history, na)
@@ -73,140 +159,137 @@ generate_basic_info <- function(n_stocks = 2,
   for (i in 1:n_stocks) basic_info$maturity[i,,] <- maturity
   
   # WAA
+  waa_opts = list()
   W <- Generate_WAA(life_history = life_history, na)
-  basic_info$waa <- array(NA,dim = c(n_fleets + n_regions + n_indices + n_stocks, ny, na))
   nwaa <- n_fleets + n_regions + n_indices + n_stocks
-  basic_info$waa <- array(NA, dim = c(nwaa, ny, na))
-  for(i in 1:nwaa) basic_info$waa[i,,] <- t(matrix(W, na, ny))
+  waa_opts$waa <- array(NA, dim = c(nwaa, ny, na))
+  for(i in 1:nwaa) waa_opts$waa[i,,] <- t(matrix(W, na, ny))
   
-  # It seesms if you don't define the waa_pointer_totcatch,waa_pointer_indices,waa_pointer_ssb,waa_pointer_M. Then the first element will be used
-  basic_info$waa_pointer_fleets   <- 1:n_fleets
-  basic_info$waa_pointer_totcatch <- (n_fleets+1):(n_fleets+n_regions)
-  basic_info$waa_pointer_indices  <- (n_fleets + n_regions + 1):(n_fleets + n_regions + n_indices)
-  basic_info$waa_pointer_ssb      <- (n_fleets + n_regions + n_indices + 1):(n_fleets + n_regions + n_indices + n_stocks)
-  basic_info$waa_pointer_M        <- basic_info$waa_pointer_ssb # Not sure what this means
+  waa_opts$waa_pointer_fleets   <- 1:n_fleets
+  waa_opts$waa_pointer_totcatch <- (n_fleets+1):(n_fleets+n_regions)
+  waa_opts$waa_pointer_indices  <- (n_fleets + n_regions + 1):(n_fleets + n_regions + n_indices)
+  waa_opts$waa_pointer_ssb      <- (n_fleets + n_regions + n_indices + 1):(n_fleets + n_regions + n_indices + n_stocks)
+  waa_opts$waa_pointer_M        <- basic_info$waa_pointer_ssb
   
-  basic_info$Fbar_ages = Fbar_ages
+  basic_info$waa_opts = waa_opts
   
   # Catch_info
+  list2env(catch_info,envir = .GlobalEnv)
   
-  basic_info$agg_catch = basic_info$agg_catch_sigma = basic_info$catch_Neff = matrix(NA, ny, n_fleets)
-  basic_info$use_catch_paa = basic_info$use_agg_catch = matrix(NA, ny, n_fleets)
-  basic_info$selblock_pointer_fleets = matrix(NA, ny, n_fleets)
+  catch_info = list()
+  catch_info$n_fleets = n_fleets
+  catch_info$agg_catch = catch_info$agg_catch_sigma = catch_info$catch_Neff = matrix(NA, ny, n_fleets)
+  catch_info$use_catch_paa = catch_info$use_agg_catch = matrix(NA, ny, n_fleets)
+  catch_info$selblock_pointer_fleets = matrix(NA, ny, n_fleets)
+  catch_info$catch_paa = array(NA, dim = c(n_fleets, ny, na))
+  catch_info$agg_catch[] = 1
+  catch_info$catch_paa[] = 1/na
+  catch_info$catch_cv = catch_cv
+  catch_info$agg_catch_sigma[] = sqrt((log(catch_cv^2 + 1)))
+  catch_info$catch_Neff[] = catch_Neff
+  catch_info$use_catch_paa[] = 1
+  catch_info$use_agg_catch[] = 1 
+  catch_info$selblock_pointer_fleets = t(matrix(1:n_fleets, n_fleets, ny))
   
-  basic_info$catch_paa = array(NA, dim = c(n_fleets, ny, na))
-  basic_info$agg_catch[] = 1 # not sure if we can delete this, worth a try
-  basic_info$catch_paa[] = 1/na # User can define OR maybe can delete?
-  basic_info$catch_cv = catch_cv
-  basic_info$agg_catch_sigma[] = sqrt((log(catch_cv^2 + 1)))
-  basic_info$catch_Neff[] = catch_Neff
-  basic_info$use_catch_paa[] = 1 # keep this first?
-  basic_info$use_agg_catch[] = 1 # keep this first?
-  basic_info$selblock_pointer_fleets = t(matrix(1:n_fleets, n_fleets, ny))
-  
-  # Indices_info
-  basic_info$agg_indices = basic_info$agg_index_sigma = basic_info$index_Neff = matrix(NA, length(basic_info$years), n_indices)
-  basic_info$index_paa = array(NA, dim = c(n_indices, ny, na))
-  basic_info$use_indices = basic_info$use_index_paa = matrix(NA, ny, n_indices)
-  basic_info$units_indices = basic_info$units_index_paa = rep(NA,n_indices)
-  basic_info$index_seasons = rep(NA,n_indices)
-  #basic_info$index_regions = 1:n_indices # e.g. if 2 surveys for each region, then should be "1,1,2,2"
-
-  if(n_regions == 1) basic_info$index_regions = rep(1,n_indices)
+  if(n_regions == 1) catch_info$fleet_regions = rep(1,n_fleets)
   if(n_regions > 1) {
-    basic_info$index_regions = NULL
+    catch_info$fleet_regions = NULL
     for (r in 1:n_regions) {
-      basic_info$index_regions = c(basic_info$index_regions,rep(r,n_indices/n_regions))
+      catch_info$fleet_regions = c(catch_info$fleet_regions,rep(r,n_fleets/n_regions))
     }
   }
   
-  #basic_info$fleet_regions = 1:n_fleets
-  if(n_regions == 1) basic_info$fleet_regions = rep(1,n_fleets)
+  basic_info$catch_info = catch_info
+  
+  # Index_info
+  list2env(index_info,envir = .GlobalEnv)
+  index_info =list()
+  
+  index_info$n_indices = n_indices
+  index_info$agg_indices = index_info$agg_index_sigma = index_info$index_Neff = matrix(NA, ny, n_indices)
+  index_info$index_paa = array(NA, dim = c(n_indices, ny, na))
+  index_info$use_indices = index_info$use_index_paa = matrix(NA, ny, n_indices)
+  index_info$units_indices = index_info$units_index_paa = rep(NA,n_indices)
+  index_info$index_seasons = rep(NA,n_indices)
+  
+  if(n_regions == 1) index_info$index_regions = rep(1,n_indices)
   if(n_regions > 1) {
-    basic_info$fleet_regions = NULL
+    index_info$index_regions = NULL
     for (r in 1:n_regions) {
-      basic_info$fleet_regions = c(basic_info$fleet_regions,rep(r,n_fleets/n_regions))
+      index_info$index_regions = c(index_info$index_regions,rep(r,n_indices/n_regions))
     }
   }
   
-  basic_info$index_cv = index_cv
+  index_info$index_cv = index_cv
+  index_info$agg_indices[] = 1
+  index_info$agg_index_sigma[] = sqrt(log(index_cv^2 + 1)) # have to double check that # Source code can be wrong
+  index_info$index_Neff[] = index_Neff
+  index_info$index_paa[] = 1/na
+  index_info$use_indices[] = 1
+  index_info$use_index_paa[] = 1
+  index_info$selblock_pointer_indices = t(matrix(n_fleets + 1:n_indices, n_indices, ny))
+  index_info$units_indices = rep(2,n_indices)
+  index_info$units_index_paa = rep(2,n_indices)
   
-  basic_info$agg_indices[] = 1
-  basic_info$agg_index_sigma[] = sqrt(log(index_cv^2 + 1)) # have to double check that # Source code can be wrong
-  basic_info$index_Neff[] = index_Neff
-  basic_info$index_paa[] = 1/na
-  basic_info$use_indices[] = 1
-  basic_info$use_index_paa[] = 1
-  basic_info$selblock_pointer_indices = t(matrix(n_fleets + 1:n_indices, n_indices, ny))
-  basic_info$units_indices = rep(2,n_indices)
-  basic_info$units_index_paa = rep(2,n_indices)
+  index_info$fracyr_indices = matrix(NA, ny, n_indices)
+  for (s in 1:n_stocks) index_info$fracyr_indices[,s] = fracyr_indices # temporarily assume 1 survey in each region/stock and same survey time
   
-  # Important about survey
   for(s in 1:n_indices) {
-    #for(j in 1:n_indices) { # assume only 1 index for each region now
     int_starts = cumsum(c(0,basic_info$fracyr_seasons))
     ind <- max(which(int_starts <= fracyr_indices))
-    basic_info$index_seasons[s] <- ind
-    basic_info$fracyr_indices[,s] = fracyr_indices - int_starts[ind] 
+    index_info$index_seasons[s] <- ind
+    index_info$fracyr_indices[,s] = fracyr_indices - int_starts[ind] 
   }
   
-  # F optional
-  nby <- length(base.years)
-  mid <- floor(nby/2)
-  
-  if (F.config == 1){
-    if(Fhist == "updown") basic_info$F <- matrix(c(seq(0,0.2,length.out = mid),seq(0.2,0,length.out=nby-mid)),nby, n_fleets)
-    if(Fhist == "downup") basic_info$F <- matrix(c(seq(0.2,0,length.out = mid),seq(0,0.2,length.out=nby-mid)),nby, n_fleets)
-    if(Fhist == "constant") basic_info$F <- matrix(0, nby, n_fleets)
-    basic_info$F[1,] = F.year1
-    if(n_feedback_years>0) basic_info$F <- rbind(basic_info$F, basic_info$F[rep(nby, n_feedback_years),, drop = F]) #same F as terminal year for feedback period
-  }
-  
-  if (F.config == 2){
-    if(Fhist == "updown") basic_info$F <- matrix(F.year1 + c(seq(0,0.2,length.out = mid),seq(0.2,0,length.out=nby-mid)),nby, n_fleets)
-    if(Fhist == "downup") basic_info$F <- matrix(F.year1 + c(seq(0.2,0,length.out = mid),seq(0,0.2,length.out=nby-mid)),nby, n_fleets)
-    if(Fhist == "constant") basic_info$F <- matrix(F.year1, nby, n_fleets)
-    if(Fhist == "Fmsy-H-L") {
-      #Fmsy <- get_FxSPR_BRPS_fn(basic_info)
-      Fmsy <- F.year1
-      year_change <- floor(nby * 0.5)
-      max_mult = 2.5; min_mult = 1
-      basic_info$F <- matrix(Fmsy*min_mult,nby, n_fleets)
-      basic_info$F[1:year_change,] = Fmsy*max_mult
-    }
-    if(n_feedback_years>0) basic_info$F <- rbind(basic_info$F, basic_info$F[rep(nby, n_feedback_years),, drop = F]) #same F as terminal year for feedback period
-  }
-    
-  basic_info$F_config = F.config
+  basic_info$index_info = index_info
   
   return(basic_info)
 }
 
-get_FxSPR_BRPS_fn <- function(basic_info, percent){
-  if(missing(percent)) percent <- 40
-  
-  n_ages<- basic_info$n_ages
-  n_stocks <- basic_info$n_stocks
-  if (n_stocks > 2) {
-    mat.age <- apply(basic_info$maturity[,1,],n_stocks,mean)
-    ssb.waa <- apply(basic_info$waa[,1,],n_stocks,mean)
-  } else {
-    mat.age <- basic_info$maturity[,1,]
-    ssb.waa <- basic_info$waa[,1,]
-  }
-  M.age <- rep(0.2, basic_info$n_ages)
-  seltot <- set_sel(a50=5,k=1,ages=1:basic_info$n_ages)
-  seltot <- seltot/max(seltot)
-  spawn.time <- basic_info$fracyr_spawn[1]
-  spr0 = get_SPR(F=0, M=M.age, sel=seltot, mat=mat.age, waassb=ssb.waa, fracyrssb = spawn.time)
-  F.start <- 0.11  # starting guess for optimization routine to find F_SPR%
-  spr.f <- function(F.start) {
-    spr = get_SPR(F=F.start, M=M.age, sel=seltot, mat=mat.age, waassb=ssb.waa, fracyrssb = spawn.time)
-    abs(100*spr/spr0 - percent)
-  }
-  opt <- nlminb(start=F.start, objective=spr.f, lower=0, upper=10)
-  Fxspr <- opt$par
-  return(Fxspr)
+Generate_Maturity <- function(life_history = NULL, na) {
+  if (is.null(life_history)){
+    warning("Life history is not specified and default is used!")
+    maturity <- t(matrix(1/(1 + exp(-1*(1:na - na/2))), na))
+  } else if (life_history == "short"){
+    m50 = 1.75; mslope = 1; 
+    maturity <- t(matrix(1/(1 + exp(-(1:na-m50)/mslope)), na))
+  } else if (life_history == "medium"){
+    m50 = 3.5; mslope = 1; 
+    maturity <- t(matrix(1/(1 + exp(-(1:na-m50)/mslope)), na))
+  } else if (life_history == "long"){
+    m50 = 7; mslope = 1; 
+    maturity <- t(matrix(1/(1 + exp(-(1:na-m50)/mslope)), na))
+  } 
+  return(maturity)
+}
+
+Generate_Len <- function(Linf,k,n_ages) {
+  Len <- Linf*(1-exp(-k*1:n_ages))
+  return(Len)
+}
+
+Generate_WAA <- function(life_history = NULL, na) {
+  if (is.null(life_history)){
+    warning("Life history is not specified and default is used!")
+    Len <- 100*(1-exp(-0.3*(1:na - 0)))
+    W <- 3e-6*Len^3
+  } else if (life_history == "short"){
+    k = 0.27; Linf = 90
+    Len <- Generate_Len(Linf,k,na)
+    LWexp = 3; LWscaler = 3e-6
+    W <- LWscaler*Len^LWexp
+  } else if (life_history == "medium"){
+    k = 0.13; Linf = 90
+    Len <- Generate_Len(Linf,k,na)
+    LWexp = 3; LWscaler = 3e-6
+    W <- LWscaler*Len^LWexp
+  } else if (life_history == "long"){
+    k = 0.07; Linf = 90
+    Len <- Generate_Len(Linf,k,na)
+    LWexp = 3; LWscaler = 3e-6
+    W <- LWscaler*Len^LWexp
+  } 
+  return(W)
 }
 
 set_sel <- function(a50,k,ages){

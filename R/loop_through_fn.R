@@ -1,4 +1,45 @@
-# Wrapper function to perform MSE
+#' Function to perform management strategy evaluation 
+#' 
+#' a wrapper function to step through the feedback period and update the operating model, 
+#' and refit the estimation model and generate the catch advice.
+#' 
+#' @param om Operating model 
+#' @param M_em Natural mortality random effects
+#' @param sel_em Selectivity random effects   
+#' @param NAA_re_em Numbers-at-age random effects 
+#' @param move_em Movement random effects
+#' @param em.opt Movement random effects
+#'   \itemize{
+#'     \item \code{$separate.em} TRUE = spatially implicit, FALSE = spatially disaggregated
+#'     \item \code{$separate.em.type} when separate.em = TRUE \cr
+#'     {=1} fleets-as-areas (global SPR brps = FALSE) \cr
+#'     {=2} fleets-as-areas (global SPR brps = TRUE) \cr
+#'     {=3} panmictic (spatially-aggregated) \cr
+#'     \item \code{$do.move} T/F movement is included (use when separate.em = FALSE)
+#'     \item \code{$est.move} T/F movement rate is estimated (use when separate.em = FALSE)
+#'     }
+#' @param assess_years Year in which the assessment is conducted
+#' @param assess_interval Assessment interval used in the MSE feedback loop
+#' @param base_years Years used in the burn-in period
+#' @param year.use Number of years used in the assessment model
+#' @param seed Seed used for generate data
+#' @param save.sdrep T/F save the full report (memory intensive) 
+#' 
+#' @return a list of model output
+#'   \describe{
+#'     \item{\code{$om}}{Operating model}
+#'     \item{\code{$sdrep_list}}{Parameter estimates from each assessment model}
+#'     \item{\code{$em_list}}{Short report of each assessment model}
+#'     \item{\code{$opt_list}}{Output from \code{\link[stats:nlminb]{stats::nlminb}}}
+#'     \item{\code{$converge_list}}{Convergence from each assessment model}
+#'     \item{\code{$om_full}}{Full report of each assessment model}
+#'   }
+#'   
+#' @export
+#'
+#' @seealso \code{\link{make_em_input}}, \code{\link{update_om_fn}}, \code{\link{advice_fn}}
+#'
+
 loop_through_fn = function(om, 
                            M_em, 
                            sel_em, 
@@ -13,29 +54,12 @@ loop_through_fn = function(om,
                            save.sdrep = FALSE) {
   
   if (is.null(em.opt)) em.opt = list(separate.em = FALSE, separate.em.type = "none", do.move = FALSE, est.move = FALSE)
-  # Fit EMs separately
   if (em.opt$separate.em) move_em = NULL
-  #if (em.opt$separate.em) {
-  #    if (!(em.opt$separate.em.type %in% c(1,2,3))) {
-  #      print("separate.em.type must be 1:3!")
-  #    } else {
-  #    em.opt$separate.em.type = NULL
-  #  }
-  #}
-  # Fit EMs simultaneously
+
   if (!em.opt$separate.em & em.opt$do.move & (is.null(move_em))) stop("movement structure (move_em) must be specified!")
   if (!em.opt$separate.em & !em.opt$do.move) move.type = 3 # no movement
   if (!em.opt$separate.em & em.opt$do.move & all(move_em$stock_move)) move.type = 2 # bidirectional
   if (!em.opt$separate.em & em.opt$do.move & !all(move_em$stock_move)) move.type = 1 # unidirectional
-  
-  # fracyr_SSB = om$input$data$fracyr_SSB
-  # fracyr_seasons = om$input$data$fracyr_seasons
-  # spawn_seasons = om$input$data$spawn_seasons
-  # int_starts = cumsum(c(0,fracyr_seasons))
-  # fracyr_spawn = (int_starts[spawn_seasons]+fracyr_SSB)[1] # assume this is constant across years and stocks
-  # fracyr_indices = om$input$data$fracyr_indices
-  # index_seasons = om$input$data$index_seasons
-  # fracyr_indices = (int_starts[index_seasons]+fracyr_indices)[1] # assume this is constant across years and stocks
   
   em_list <- list()
   sdrep_list <- list()
@@ -46,10 +70,6 @@ loop_through_fn = function(om,
   if (em.opt$separate.em) {
     
     if (em.opt$separate.em.type == 1) {
-      # set selectivity, M, NAA for only one stock
-      sel_em = list(model=rep("logistic",2),initial_pars=c(rep(list(c(5,1)),1),rep(list(c(2,1)),1)),fix_pars=rep(list(NULL),2))
-      M_em$initial_means = array(M_em$initial_means[1], dim = c(1,1,dim(M_em$initial_means)[3]))
-      NAA_re_em <- list(N1_model = "equilibrium",sigma = "rec+1",cor = "iid")
       
       for(y in assess_years){
         
@@ -110,9 +130,6 @@ loop_through_fn = function(om,
     
     if (em.opt$separate.em.type == 2) {
       # one area model with area-specific fleet and survey info
-      M_em$initial_means = array(M_em$initial_means[1], dim = c(1,1,dim(M$initial_means)[3]))
-      NAA_re_em <- list(N1_model = "equilibrium",sigma = "rec+1",cor = "iid")
-      
       for(y in assess_years){
         
         i <- which(assess_years == y)
@@ -153,10 +170,6 @@ loop_through_fn = function(om,
     
     if (em.opt$separate.em.type == 3) {
       # one area model with combined fleet and survey info
-      sel_em = list(model=rep("logistic",2),initial_pars=c(rep(list(c(5,1)),1),rep(list(c(2,1)),1)),fix_pars=rep(list(NULL),2))
-      M_em$initial_means = array(M_em$initial_means[1], dim = c(1,1,dim(M$initial_means)[3]))
-      NAA_re_em <- list(N1_model = "equilibrium",sigma = "rec+1",cor = "iid")
-      
       for(y in assess_years){
         
         i <- which(assess_years == y)

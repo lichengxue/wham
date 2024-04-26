@@ -270,27 +270,19 @@ prepare_wham_input <- function(asap3 = NULL, model_name="WHAM for unnamed stock"
 
 	# Catch
 	#input$data$n_seasons first defined here
-	catch_info = NULL
-	catch_names = c("n_fleets","agg_catch", "catch_paa", "catch_cv","catch_Neff", "use_catch_paa", "use_agg_catch",
-	                "selblock_pointer_fleets", "agg_catch_sigma","fleet_regions")
-	if(any(names(basic_info) %in% catch_names)) catch_info = basic_info[catch_names]
+	if(any(names(basic_info) %in% "catch_info")) catch_info = basic_info$catch_info
 	input = set_catch(input, catch_info)
 	print("catch")
 
 	# Indices/surveys
-	index_info = NULL
-	index_names = c("n_indices", "agg_indices", "index_paa", "fracyr_indices", "index_cv", "index_Neff", "units_indices",
-	                "units_index_paa", "use_indices", "use_index_paa", "selblock_pointer_indices",
-	                "agg_index_sigma","index_seasons","index_regions")
-	if(any(names(basic_info) %in% index_names)) index_info = basic_info[index_names]
+	if(any(names(basic_info) %in% "index_info")) index_info = basic_info$index_info
 	input = set_indices(input, index_info)
 	print("indices")
 	#print(input$data$selblock_pointer_indices)
 
 	# WAA in case we want to modify how weight-at age is handled
 	waa_opts = NULL
-	index_names = c("waa", "waa_pointer_fleets", "waa_pointer_totcatch", "waa_pointer_indices", "waa_pointer_ssb", "waa_pointer_M")
-	if(any(names(basic_info) %in% index_names)) waa_opts = basic_info[index_names]
+	if(any(names(basic_info) %in% "waa_opts")) waa_opts = basic_info$waa_opts
 	input = set_WAA(input, waa_opts)
 	print("WAA")
 
@@ -314,6 +306,7 @@ prepare_wham_input <- function(asap3 = NULL, model_name="WHAM for unnamed stock"
 	print("age_comp")
 
 	#in case we want to add alternative F options
+	if(any(names(basic_info) %in% "F_opts")) F_opts = basic_info$F_opts
 	input = set_F(input, F_opts)
 	print("F")
 
