@@ -1,3 +1,17 @@
+#' Update fishing mortality in the operating model given the catch
+#' 
+#' Function to update F in the operating model given the catch advice 
+#' 
+#' @param om Operating model 
+#' @param year Actual year(s) in the projection
+#' @param catch Catch advice in the projection years 
+#'     
+#' @return an operating model with updated F time series
+#'   
+#' @export
+#'
+#' @seealso \code{\link{get_F_from_catch}}
+#' 
 update_om_F = function(om, year, catch){
   rep = om$rep #generate the reported values given the parameters
   #year = om$years[year]
@@ -11,6 +25,7 @@ update_om_F = function(om, year, catch){
   F_region = apply(FAA_all, 1, max) #full F for each region
   om$input$par$F_pars[year_ind,] = log(F_region)
   om <- fit_wham(om$input, do.fit = FALSE, MakeADFun.silent = TRUE)
+  return(om)
 }
 
 get_F_from_catch <- function(om, year, catch, Finit = 0.1, maxF = 10){ # here year has to be year starting from 1

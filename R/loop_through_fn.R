@@ -346,5 +346,5 @@ loop_through_fn = function(om,
     }
   }
   if(save.sdrep) return(list(om = om, sdrep_list = sdrep_list, em_list  = em_list, opt_list = opt_list, converge_list = converge_list, om_full = om_full))
-  return(list(om = om, sdrep_list = sdrep_list, em_list  = em_list, opt_list = opt_list, converge_list = converge_list))
+  return(list(om = om, sdrep_list = sdrep_list, em_list  = em_list, opt_list = opt_list, converge_list = converge_list, om_full = NULL))
 }
