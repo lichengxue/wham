@@ -270,15 +270,19 @@ prepare_wham_input <- function(asap3 = NULL, model_name="WHAM for unnamed stock"
 
 	# Catch
 	#input$data$n_seasons first defined here
+	if(any(names(basic_info) %in% "catch_info")) catch_info = basic_info$catch_info
 	input = set_catch(input, catch_info)
 	print("catch")
 
 	# Indices/surveys
+	if(any(names(basic_info) %in% "index_info")) index_info = basic_info$index_info
 	input = set_indices(input, index_info)
 	print("indices")
 	#print(input$data$selblock_pointer_indices)
 
 	# WAA in case we want to modify how weight-at age is handled
+	waa_opts = NULL
+	if(any(names(basic_info) %in% "waa_opts")) waa_opts = basic_info$waa_opts
 	input = set_WAA(input, waa_opts)
 	print("WAA")
 
@@ -302,6 +306,7 @@ prepare_wham_input <- function(asap3 = NULL, model_name="WHAM for unnamed stock"
 	print("age_comp")
 
 	#in case we want to add alternative F options
+	if(any(names(basic_info) %in% "F_opts")) F_opts = basic_info$F_opts
 	input = set_F(input, F_opts)
 	print("F")
 
