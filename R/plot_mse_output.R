@@ -15,6 +15,8 @@ plot_mse_output <- function(mods, main.dir = getwd(), use.n.years = 10, dpi = 15
   # main.dir = getwd()
   
   require(ggplot2)
+  require(dplyr)
+  require(tidyr)
   sub.dir <- 'Report'
   if (file.exists(sub.dir)){
   } else {
@@ -662,6 +664,23 @@ plot_mse_output <- function(mods, main.dir = getwd(), use.n.years = 10, dpi = 15
   var = "SSB"
   res = NULL
   for (i in 1:length(mods)){
+      tmp <- extract_var(mods[[i]],var)
+      if (is.null(use.n.years)) {
+        tmp <- tail(tmp,5)
+      } else {
+        tmp <- tail(tmp,use.n.years)
+      }
+      tmp <- data.frame(t(colSums(tmp)))
+      tmp$nsim <- i
+      tmp$Model <- paste("Model",j)
+      res <- rbind(res, tmp)
+  }
+  res1 <- tidyr::pivot_longer(res,cols = starts_with(var),names_to = "Index", values_to = "Value")
+  
+  
+  var = "SSB"
+  res = NULL
+  for (i in 1:length(mods)){
     for (j in 1:length(mods[[1]])){
       tmp <- extract_var(mods[[i]][[j]],var)
       if (is.null(use.n.years)) {
@@ -716,6 +735,7 @@ plot_mse_output <- function(mods, main.dir = getwd(), use.n.years = 10, dpi = 15
         tmp <- tail(tmp,use.n.years)
         tmp <- apply(tmp,2,function(x) sum(x < 1)/use.n.years)
       }
+      # tmp[which(tmp == 0)] = 0.01
       tmp <- data.frame(t(tmp))
       names(tmp) <- paste0("Not_Overfished_s",1:ncol(tmp))
       names(tmp)[ncol(tmp)] <- "Not_Overfished_Global"
@@ -765,6 +785,7 @@ plot_mse_output <- function(mods, main.dir = getwd(), use.n.years = 10, dpi = 15
         tmp <- tail(tmp,use.n.years)
         tmp <- apply(tmp,2,function(x) sum(x < 1)/use.n.years)
       }
+      # tmp[which(tmp == 0)] = 0.01
       tmp <- data.frame(t(tmp))
       names(tmp) <- paste0("Not_Overfishing_r",1:ncol(tmp))
       names(tmp)[ncol(tmp)] <- "Not_Overfishing_Global"
@@ -792,6 +813,14 @@ plot_mse_output <- function(mods, main.dir = getwd(), use.n.years = 10, dpi = 15
   df <- data.frame(spread(df_agg, key = Index, value = "Value"))
   
   rownames(df) <- df$Model
+  
+  for (i in 2:ncol(df)){
+    tmp <- df[,i]
+    if (max(tmp) == min(tmp)) {
+      df[,i] = NA
+    }
+  }
+  
   # max_values = apply(df[,-1],2,max)
   # min_values = apply(df[,-1],2,min)
   # Plot radar plots for each model and combine them
