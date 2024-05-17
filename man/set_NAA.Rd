@@ -14,8 +14,8 @@ set_NAA(input, NAA_re = NULL)
 If \code{NAA_re = NULL}, a traditional statistical catch-at-age model is fit (NAA = pred_NAA for all ages, deterministic). Otherwise,
 \code{NAA_re} specifies numbers-at-age configuration. It is a list with the following possible entries:
   \describe{
-    \item{$sigma}{Which ages allow deviations from the predicted NAA given NAA from previou time step? Must be a single character string described below or a vector
-                   of length n_stocks. If length = 1, assumptions will be applied to all stocks. Common options are specified with the strings:
+    \item{$sigma}{Which ages allow deviations from the predicted NAA given NAA from previous time step? Must be a single character string described below or a vector
+                   of length n_stocks. If length = 1, assumptions will be applied to all stocks. Options are specified with the strings:
                    \describe{
                      \item{"rec"}{Random effects on recruitment (deviations), all other ages deterministic}
                      \item{"rec+1"}{"Full state space" model with 2 estimated \code{sigma_a}, one for recruitment and one shared among other ages}
@@ -28,7 +28,7 @@ If \code{NAA_re = NULL}, a traditional statistical catch-at-age model is fit (NA
                   Values are not used if recruit_model = 1 and \code{NAA_re$sigma} is not specified.
                  }
     \item{$sigma_vals}{Initial standard deviation values to use for the NAA deviations. Values are not used if recruit_model = 1 and \code{NAA_re$sigma} is
-                 not specifed. Otherwise when \code{NAA_re$sigma} =
+                 not specified. Otherwise when \code{NAA_re$sigma} =
                  \describe{
                    \item{"rec"}{must be a list (length = n_stocks) of single values .}
                    \item{"rec+1"}{Either 1) a list (length = n_stocks) of 2 values must be specified. First is for the first age class (recruits), second is for all other ages,
@@ -36,7 +36,8 @@ If \code{NAA_re = NULL}, a traditional statistical catch-at-age model is fit (NA
                  }
                  If \code{NAA_re$sigma_map} is defined, the user must ensure that the configuration is compatible with \code{NAA_re$sigma_vals}
                }
-    \item{$cor}{Correlation structure for the NAA deviations. Options are:
+    \item{$cor}{Correlation structure for the NAA deviations. Must be a single character string described below or a vector
+                   of length n_stocks. If length = 1, assumptions will be applied to all stocks. Options are:
                  \describe{
                    \item{"iid"}{NAA deviations vary by year and age, but uncorrelated.}
                    \item{"ar1_a"}{NAA deviations correlated by age (AR1).}
@@ -47,10 +48,15 @@ If \code{NAA_re = NULL}, a traditional statistical catch-at-age model is fit (NA
     \item{$cor_vals}{Initial correlation values to use for the NAA deviations. If unspecified all initial values are 0. When \code{NAA_re$cor} = 
                  \describe{
                    \item{"iid"}{values are not used.}
-                   \item{"ar1_a" or "ar1_y"}{cor_vals must be a single value.}
-                   \item{"2dar1"}{2 values must be specified. First is for "age", second is for "year".}
+                   \item{"ar1_a" or "ar1_y"}{must be a list (length = n_stocks) each with a single value.}
+                   \item{"2dar1"}{must be a list (length = n_stocks) each with 2 values. First is for "age", second is for "year".}
                  }
                }
+    \item{$decouple_recruitment}{T/F determining whether correlation structure of recruitment is independent of RE deviations for older ages 
+       (default = FALSE). Only applicable for \code{NAA_re$sigma = "rec+1"} and correlation across ages is specified. If TRUE and \code{NAA_re$cor = "ar1_a"}, only deviations for ages>1 
+       have the correlation structure. If TRUE and NAA_re$cor is "ar1_y" or "2dar1" separate year correlation parameters are estimated for recruitment and older
+       ages.
+    }
     \item{$N1_model}{Integer vector (n_stocks) determining which way to model the initial numbers at age:
       \describe{
          \item{"age-specific-fe"}{(default) age- and region-specific fixed effects parameters}
@@ -59,23 +65,40 @@ If \code{NAA_re = NULL}, a traditional statistical catch-at-age model is fit (NA
          \item{"ar1-re"}{(default) age- and region-specific random effects parameters. 3 parameters: mean and sd, and cor for log NAA}
       }
     }
-    \item{$N1_pars}{if N1_model = 0, then these would be the initial values to use for abundance at age in the first year. If N1_model = 1, This would be the
-       initial numbers in the first age class and the equilibrium fishing mortality rate generating the rest of the numbers at age in the first year.
+    \item{$N1_pars}{An (n_stocks x n_regions x n_ages) array. If N1_model = 0, then this should be filled with the initial values to use for abundance at age by stock and region in the first year. 
+       If N1_model = 1 (equilibrium assumption), only the first two values in the ages dimension are used: the (s,r,1) value is recruitment for stock (and region) and (s,r,2) is the fully-selected 
+       equilibrium fishing mortality rate generating the rest of the numbers at age in the first year.
     }
     \item{$recruit_model}{Integer vector (n_stocks) determining how to model recruitment. Overrides \code{recruit_model} argument to \code{prepare_wham_input}. Must make sure \code{NAA_re$sigma}, \code{NAA_re$cor}
        and \code{ecov} are properly specified.
       \describe{
-          \item{1}{SCAA, estimating all recruitements as fixed effects or a random walk if NAA_re$sigma specified}
-          \item{2}{estimating a mean recruitment with yearly recruitements as random effects}
-          \item{3}{Beverton-Holt stock-recruitment with yearly recruitements as random effects}
-          \item{4}{Ricker stock-recruitment with yearly recruitements as random effects}
+          \item{1}{SCAA, estimating annual recruitments as fixed effects or a random walk if NAA_re$sigma specified}
+          \item{2}{estimating a mean recruitment with annual recruitments as random effects}
+          \item{3}{Beverton-Holt stock-recruitment with annual recruitments as random effects}
+          \item{4}{Ricker stock-recruitment with annual recruitments as random effects}
       }
     }
-    \item{$recruit_pars}{list (length = n_stocks) of vectors of initial parameters for recruitment model. If use_steepness=F, parameters are "alpha" and "beta"
-       otherwise they are steepness and R0.
+    \item{$recruit_pars}{list (length = n_stocks) of vectors of initial parameters for recruitment model. If $recruit_model is 3 or 4, parameters are "alpha" and "beta".
     }
   }}
 }
+\value{
+a named list with same elements as the input provided with abundance modeling options modified.
+}
 \description{
 Specify model and parameter configuration for numbers at age
+}
+\examples{
+\dontrun{
+wham.dir <- find.package("wham")
+path_to_examples <- system.file("extdata", package="wham")
+asap3 <- read_asap3_dat(file.path(path_to_examples,"ex1_SNEMAYT.dat"))
+input <- prepare_wham_input(asap3)
+NAA = list(sigma = "rec")
+input <- set_q(input, NAA_re = NAA) #estimate recruitment as random effects
+}
+
+}
+\seealso{
+\code{\link{prepare_wham_input}}
 }

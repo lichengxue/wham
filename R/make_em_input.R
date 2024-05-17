@@ -35,6 +35,7 @@ make_em_input = function(om,
                          em.opt = em.opt,
                          em_years = NULL,
                          year.use = NULL) {
+  
   if (em.opt$separate.em) em.opt$do.move = FALSE 
   if (!em.opt$separate.em & !em.opt$do.move) move.type = 3 # no movement
   if (!em.opt$separate.em & em.opt$do.move & all(move_em$stock_move)) move.type = 2 # bidirectional
@@ -43,11 +44,17 @@ make_em_input = function(om,
   data = om$input$data
   
   if (!is.null(year.use)) {
-    if (year.use > length(em_years)) stop("Warning: year.use must be > em_years!")
-    ind_em = (length(em_years)-year.use+1):length(em_years)
-    em_years = tail(em_years,year.use)
+    if (year.use > length(em_years)) {
+      warnings("year.use must be > em_years!\nyear.use is set to equal to em_years")
+      year.use = length(em_years)
+      ind_em = em_years
+    } else {
+      ind_em = (length(em_years)-year.use+1):length(em_years)
+      em_years = tail(em_years,year.use)
+      }
   } else {
     year.use = length(em_years)
+    ind_em = em_years
   }
   
   if (em.opt$separate.em){

@@ -1,3 +1,13 @@
+#' Fix movement parameter
+#' 
+#' a function to fix movement rate in the input. 
+#' 
+#' @param input wham input
+
+#' @return a wham input with movement rate treated as known
+#'   
+#' @export
+#'
 fix_move <- function(input) {
   temp <- array(as.integer(input$map$trans_mu), dim = dim(input$par$trans_mu))
   temp[] <- NA

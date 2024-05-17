@@ -34,8 +34,8 @@ to modify the selectivity specification.
                  }
                 }
     \item{$initial_pars}{Initial parameter values for each block. List of length = number of selectivity blocks. Each entry must be
-               a vector of length # parameters in the block, i.e. \code{c(2,0.2)} for logistic or \code{c(0.5,0.5,0.5,1,1,0.5)} for
-               age-specific with 6 ages. Default is to set at middle of parameter range. This is 0.5 for age-specific and n.ages/2 
+               a vector of length # parameters in the block, i.e. \code{c(2,0.2)} for logistic (a50 and 1/slope) or \code{c(0.5,0.5,0.5,1,1,0.5)} for
+               age-specific parameters when there are 6 ages. Default is to set at middle of parameter range. This is 0.5 for age-specific and n.ages/2 
                or logistic, double-logistic, and decreasing-logistic.}
     \item{$fix_pars}{Alternative to \code{$map_pars} for specifying which selectivity parameters (only fixed effects) to fix at initial values. 
                List of length = number of selectivity blocks. E.g. model with 3 age-specific blocks and 6 ages, 
@@ -66,6 +66,25 @@ to modify the selectivity specification.
                of fleets + indices. If specified, ensure other components of \code{selectivity} are consistent.}
   }}
 }
+\value{
+a named list with same elements as the input provided with selectivity options modified.
+}
 \description{
 Specify model and parameter configuration for selectivity
+}
+\examples{
+\dontrun{
+wham.dir <- find.package("wham")
+path_to_examples <- system.file("extdata", package="wham")
+asap3 <- read_asap3_dat(file.path(path_to_examples,"ex1_SNEMAYT.dat"))
+input <- prepare_wham_input(asap3, NAA_re = list(sigma = "rec"))
+sel <- list(model=rep("logistic",input$data$n_selblocks),
+   initial_pars=rep(list(c(3,3)),input$data$n_selblocks),
+   fix_pars=rep(list(NULL),input$data$n_selblocks),
+input <- set_selectivity(input, selectivity = sel) #logistic selectivity for all selectivity blocks
+}
+
+}
+\seealso{
+\code{\link{prepare_wham_input}}
 }

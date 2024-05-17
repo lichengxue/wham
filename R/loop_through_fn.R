@@ -250,7 +250,7 @@ loop_through_fn = function(om,
           interval.info = list(catch = advice, years = y + 1:assess_interval)
           
           # update the operating model with the right Fs and resimulate the data given those Fs
-          om = update_om_fn(om, interval.info = interval.info, seed = seed)  
+          om = update_om_fn(om, interval.info = interval.info, seed = seed)
           
           em_list[[i]] <- em$rep
           sdrep_list[[i]] <- em$sdrep$par.fixed

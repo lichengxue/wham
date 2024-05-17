@@ -26,6 +26,22 @@ If \code{NULL}, all settings from the ASAP data file or basic_info are used.
     \item{$selblock_pointer_fleets}{matrix (n_years_model x n_fleets) of itegers indicated selblocks to use.}
   }}
 }
+\value{
+a named list with same elements as the input provided with catch observations and fleet options modified.
+}
 \description{
 Specify catch selectivity blocks and aggregate and age composition observations for catch
+}
+\examples{
+\dontrun{
+wham.dir <- find.package("wham")
+path_to_examples <- system.file("extdata", package="wham")
+asap3 <- read_asap3_dat(file.path(path_to_examples,"ex1_SNEMAYT.dat"))
+input <- prepare_wham_input(asap3)
+input <- set_catch(input, catch_info = list(agg_catch = newcatch)) #constant catch of 500 mt
+}
+
+}
+\seealso{
+\code{\link{prepare_wham_input}}
 }

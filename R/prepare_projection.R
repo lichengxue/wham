@@ -114,6 +114,17 @@ prepare_projection = function(model, proj.opts, check.version=FALSE) {
       data$proj_F_opt[] = 3
     }
   }
+  # data$proj_Fcatch = rep(0,data$n_years_proj)
+  # if(!is.null(proj.opts$proj.F)){
+  #   data$proj_F_opt[] = 4
+  #   if(length(proj.opts$proj.F) != data$n_years_proj) stop("length of proj.F is not = number of projection years")
+  #   data$proj_Fcatch[] = proj.opts$proj.F
+  # }
+  # if(!is.null(proj.opts$proj.catch)){
+  #   data$proj_F_opt[] = 5
+  #   if(length(proj.opts$proj.catch) != data$n_years_proj) stop("length of proj.catch is not = number of projection years")
+  #   data$proj_Fcatch[] = proj.opts$proj.catch
+  # }
   data$proj_Fcatch = rep(0,data$n_years_proj)
   if(!is.null(proj.opts$proj.F)){
     data$proj_F_opt[] = 4
@@ -121,9 +132,15 @@ prepare_projection = function(model, proj.opts, check.version=FALSE) {
     data$proj_Fcatch[] = proj.opts$proj.F
   }
   if(!is.null(proj.opts$proj.catch)){
-    data$proj_F_opt[] = 5
-    if(length(proj.opts$proj.catch) != data$n_years_proj) stop("length of proj.catch is not = number of projection years")
-    data$proj_Fcatch[] = proj.opts$proj.catch
+    if (!is.matrix(proj.opts$proj.catch)){  
+      data$proj_F_opt[] = 5
+      if(length(proj.opts$proj.catch) != data$n_years_proj) stop("length of proj.catch is not = number of projection years")
+      data$proj_Fcatch[] = proj.opts$proj.catch
+      } else {
+      data$proj_F_opt[] = 5
+      if(nrow(proj.opts$proj.catch) != data$n_years_proj) stop("length of proj.catch is not = number of projection years")
+      data$proj_Fcatch = proj.opts$proj.catch
+      }
   }
   if(!is.null(proj.opts$proj_F_opt)){
     if(length(proj.opts$proj_F_opt) != data$n_years_proj) stop("length of proj_F_opt is not = number of projection years")

@@ -13,6 +13,8 @@
 #'
 plot_mse_output <- function(mods, main.dir = getwd(), use.n.years = 10, dpi = 150) {
   # main.dir = getwd()
+  
+  require(ggplot2)
   sub.dir <- 'Report'
   if (file.exists(sub.dir)){
   } else {
