@@ -117,7 +117,7 @@ loop_through_fn2 = function(om,
         
         # update the operating model with the right Fs and resimulate the data given those Fs
         info = generate_basic_info(base.years = base_years[1]:y)
-        info = generate_NAA_where(basic_info = info, move.type = move.type)
+        info = generate_NAA_where(basic_info = info, move.type = 2)
         #fill in the data from the operating model simulation
         info$catch_info$agg_catch = om$input$data$agg_catch[1:length(base_years[1]:y),,drop = F]
         info$index_info$agg_indices = om$input$data$agg_indices[1:length(base_years[1]:y),,drop = F]
@@ -191,7 +191,7 @@ loop_through_fn2 = function(om,
         
         # update the operating model with the right Fs and resimulate the data given those Fs
         info = generate_basic_info(base.years = base_years[1]:y)
-        info = generate_NAA_where(basic_info = info, move.type = move.type)
+        info = generate_NAA_where(basic_info = info, move.type = 2)
         #fill in the data from the operating model simulation
         info$catch_info$agg_catch = om$input$data$agg_catch[1:length(base_years[1]:y),,drop = F]
         info$index_info$agg_indices = om$input$data$agg_indices[1:length(base_years[1]:y),,drop = F]
@@ -269,7 +269,7 @@ loop_through_fn2 = function(om,
         
         # update the operating model with the right Fs and resimulate the data given those Fs
         info = generate_basic_info(base.years = base_years[1]:y)
-        info = generate_NAA_where(basic_info = info, move.type = move.type)
+        info = generate_NAA_where(basic_info = info, move.type = 2)
         #fill in the data from the operating model simulation
         info$catch_info$agg_catch = om$input$data$agg_catch[1:length(base_years[1]:y),,drop = F]
         info$index_info$agg_indices = om$input$data$agg_indices[1:length(base_years[1]:y),,drop = F]
@@ -349,7 +349,7 @@ loop_through_fn2 = function(om,
           # om = update_om_fn(om, interval.info = interval.info, seed = seed)  
           
           info = generate_basic_info(base.years = base_years[1]:y)
-          info = generate_NAA_where(basic_info = info, move.type = move.type)
+          info = generate_NAA_where(basic_info = info, move.type = 2)
           #fill in the data from the operating model simulation
           info$catch_info$agg_catch = om$input$data$agg_catch[1:length(base_years[1]:y),,drop = F]
           info$index_info$agg_indices = om$input$data$agg_indices[1:length(base_years[1]:y),,drop = F]
@@ -426,7 +426,7 @@ loop_through_fn2 = function(om,
           
           # update the operating model with the right Fs and resimulate the data given those Fs
           info = generate_basic_info(base.years = base_years[1]:y)
-          info = generate_NAA_where(basic_info = info, move.type = move.type)
+          info = generate_NAA_where(basic_info = info, move.type = 2)
           #fill in the data from the operating model simulation
           info$catch_info$agg_catch = om$input$data$agg_catch[1:length(base_years[1]:y),,drop = F]
           info$index_info$agg_indices = om$input$data$agg_indices[1:length(base_years[1]:y),,drop = F]
@@ -500,7 +500,7 @@ loop_through_fn2 = function(om,
         # om = update_om_fn(om, seed = seed, interval.info = interval.info) 
         
         info = generate_basic_info(base.years = base_years[1]:y)
-        info = generate_NAA_where(basic_info = info, move.type = move.type)
+        info = generate_NAA_where(basic_info = info, move.type = 2)
         #fill in the data from the operating model simulation
         info$catch_info$agg_catch = om$input$data$agg_catch[1:length(base_years[1]:y),,drop = F]
         info$index_info$agg_indices = om$input$data$agg_indices[1:length(base_years[1]:y),,drop = F]
