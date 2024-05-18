@@ -217,7 +217,7 @@ loop_through_fn2 = function(om,
         
         proj_opts = list(n.yrs=3, proj.catch = advice)
         em_proj = project_wham(om2, proj.opts = proj_opts, MakeADFun.silent=TRUE)
-        updated_F = log(tail(em_proj$rep$Fbar,assess.interval))
+        updated_F = log(tail(em_proj$rep$Fbar,assess_interval))
         cat(paste0("\nFsolve: ", exp(updated_F),"\n"))
         years = y + 1:assess_interval
         year_ind = which(om$years %in% years)
@@ -257,7 +257,7 @@ loop_through_fn2 = function(om,
         
         if (!conv | !pdHess) warning("Assessment model is not converged!")
         # make the catch advice
-        advice = advice_fn(em = em, pro.yr = assess.interval)
+        advice = advice_fn(em = em, pro.yr = assess_interval)
         
         # Warning this catch advice is divided by 2 (e.g. 2 regions)
         # cat("\nWarning catch advice is forced to be divided by number of regions!")
