@@ -4,7 +4,7 @@
 \alias{update_om_fn}
 \title{Update the operating model and generate data}
 \usage{
-update_om_fn(om, interval.info = NULL, seed = 123)
+update_om_fn(om, om2, interval.info, seed = 123)
 }
 \arguments{
 \item{om}{Operating model}

@@ -6,6 +6,11 @@
 \usage{
 loop_through_fn(
   om,
+  M_om,
+  sel_om,
+  NAA_re_om,
+  mean_rec_weights = NULL,
+  move_om,
   M_em,
   sel_em,
   NAA_re_em,
@@ -20,23 +25,33 @@ loop_through_fn(
 )
 }
 \arguments{
-\item{om}{Operating model}
+\item{om}{Operating model including pseudo data}
 
-\item{M_em}{Natural mortality random effects}
+\item{M_om}{Natural mortality configuration in the OM}
 
-\item{sel_em}{Selectivity random effects}
+\item{sel_om}{Selectivity configuration in the OM}
 
-\item{NAA_re_em}{Numbers-at-age random effects}
+\item{NAA_re_om}{Numbers-at-age (NAA) configuration in the OM}
 
-\item{move_em}{Movement random effects}
+\item{mean_rec_weights}{A vector of weights given to each stock (default = NULL)}
 
-\item{em.opt}{Movement random effects
+\item{move_om}{Movement configuration in the OM}
+
+\item{M_em}{Natural mortality configuration in the assessment model}
+
+\item{sel_em}{Selectivity configuration in the assessment model}
+
+\item{NAA_re_em}{Numbers-at-age (NAA) configuration in the assessment model}
+
+\item{move_em}{Movement configuration in the assessment model}
+
+\item{em.opt}{Type of assessment model
 \itemize{
   \item \code{$separate.em} TRUE = spatially implicit, FALSE = spatially disaggregated
   \item \code{$separate.em.type} when separate.em = TRUE \cr
-  {=1} fleets-as-areas (global SPR brps = FALSE) \cr
+  {=1} separate/independent assessment models (i.e. global SPR brps = FALSE) \cr
   {=2} fleets-as-areas (global SPR brps = TRUE) \cr
-  {=3} panmictic (spatially-aggregated) \cr
+  {=3} panmictic (use spatially-aggregated data and projected total catch will be allocated based on stock-specific recruitment) \cr
   \item \code{$do.move} T/F movement is included (use when separate.em = FALSE)
   \item \code{$est.move} T/F movement rate is estimated (use when separate.em = FALSE)
   }}

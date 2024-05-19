@@ -4,15 +4,22 @@
 \alias{advice_fn}
 \title{Generate catch advice}
 \usage{
-advice_fn(em, pro.yr = assess.interval)
+advice_fn(em, pro.yr = assess.interval, type = 1)
 }
 \arguments{
-\item{em}{estimation model}
+\item{em}{Estimation model}
 
 \item{pro.yr}{Number of years in projection}
+
+\item{type}{Type of harvest control rule
+\itemize{
+  \item \code{"1"} Annual projected catch based on 75% of F40% (default)
+  \item \code{"2"} Constant catch based on 75% of F40%
+  \item \code{"3"} "Hockey stick" catch based on stock status
+  }}
 }
 \value{
-a list of catch adive
+a list of catch advice
 }
 \description{
 a function to generate catch advice for management strategy evaluation.

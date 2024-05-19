@@ -16,42 +16,20 @@
 #'
 #' @seealso \code{\link{update_om_F}}
 #' 
-update_om_fn = function(om, interval.info = NULL,
-                        seed = 123) {
+update_om_fn <- function(om, om2, interval.info, seed = 123) {
+  proj_opts = list(n.yrs=length(interval.info$years), proj.catch = interval.info$catch)
+  em_proj = project_wham(om2, proj.opts = proj_opts, MakeADFun.silent=TRUE)
+  assess_interval = length(interval.info$years)
+  updated_F = log(tail(em_proj$rep$Fbar,assess_interval))
+  cat(paste0("\nFsolve: ", exp(updated_F),"\n"))
+  year_ind = which(om$years %in% interval.info$years)
+  om$input$par$F_pars[year_ind,] = updated_F
   
   obs_names = c("agg_indices","agg_catch","catch_paa","index_paa", "Ecov_obs", "obsvec")
-  
-  if(!is.null(interval.info)){ #iteratively update F over assessment interval for the given catch advice
-    for(y in interval.info$years){
-      set.seed(seed)
-      if (!is.matrix(interval.info$catch)) interval.info$catch = matrix(interval.info$catch,1,length(interval.info$catch))
-      om = update_om_F(om, year = y, catch = interval.info$catch[which(interval.info$years==y),]) #put in the right F values
-      om_sim = om$simulate(complete=TRUE) #resimulate the population and observations
-      # Option 1
-      om$input$data[obs_names] = om_sim[obs_names] #update any simulated data
-
-      # Option 2
-      #om$input$data = om_sim
-      
-      om$input$par[om$input$random] = om_sim[om$input$random]
-      
-      # reset the om
-      om <- fit_wham(om$input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, MakeADFun.silent = TRUE)
-    }
-  } else { #otherwise just (re)generate the population
-    set.seed(seed)
-    om_sim = om$simulate(complete=TRUE) #resimulate the population and observations
-    
-    # Option 1
-    om$input$data[obs_names] = om_sim[obs_names] #update any simulated data
-    
-    # Option 2
-    #om$input$data = om_sim
-    
-    om$input$par[om$input$random] = om_sim[om$input$random]
-    
-    # reset the om
-    om <- fit_wham(om$input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, MakeADFun.silent = TRUE)
-  }
+  set.seed(seed)
+  om_sim = om$simulate(complete=TRUE) #resimulate the population and observations
+  om$input$data[obs_names] = om_sim[obs_names] #update any simulated data
+  om$input$par[om$input$random] = om_sim[om$input$random]
+  om <- fit_wham(om$input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, MakeADFun.silent = TRUE)
   return(om)
 }
