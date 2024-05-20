@@ -516,6 +516,8 @@ mods[[6]] = loop_through_fn(om = data,
                             save.sdrep = FALSE)
 ````
 ### Plot MSE output
+```r
 m <- list()
 m[[1]] <- list(mods[[1]],mods[[2]],mods[[3]],mods[[4]],mods[[5]],mods[[6]])
 plot_mse_output(m, main.dir = main.dir) # plots should now be saved in main.dir
+````
