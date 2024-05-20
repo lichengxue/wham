@@ -11,13 +11,14 @@ You can download the “mse” branch of the “wham” package from Github by f
 For the users who are installing "wham" for the first time:
 ```r
 library_paths <- .libPaths()[1]
-install.packages(file.path(library/you/download/package,"wham"), repos = NULL, type = "source", lib=library_paths)
+install.packages(file.path(library/you/download/package,"wham"), dependencies = TRUE, repos = NULL, type = "source", lib=library_paths)
+# devtools::install_local(file.path(main.dir,"wham"), dependencies = TRUE)
 # Remember load the "mse" package using:
 library(wham)
 ````
 For the users who has "single-wham" installed before, it's necessary to install the "mse" package in a different directory to avoid one overwriting the other:
 ```r
-devtools::install_github(file.path(library/you/download/package,"wham"), repos = NULL, type = "source", lib="library/you/want/to/save/package/")
+devtools::install_github(file.path(library/you/download/package,"wham"), dependencies = TRUE, repos = NULL, type = "source", lib="library/you/want/to/save/package/")
 # Remember load the "mse" package using:
 library(wham, lib.loc = "library/you/want/to/save/package/")
 ````
