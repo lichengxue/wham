@@ -408,6 +408,7 @@ mods[[1]] = loop_through_fn(om = data,
                             save.sdrep = FALSE)
 ````
 #### EM2: Assessment model (spatially-implicit fleets-as-areas) with NAA Random Effects
+![EM2](https://github.com/lichengxue/wham/blob/mse/mse_vignettes/Vignettes_figs/EM2.png)
 ```r
 n_stocks = n_regions = 1
 n_fleets = n_indices = 2
@@ -436,6 +437,7 @@ mods[[2]] = loop_through_fn(om = data,
                             save.sdrep = FALSE)
 ````
 ### EM3: Assessment model (catch and survey aggregated) with NAA Random Effects
+![EM3](https://github.com/lichengxue/wham/blob/mse/mse_vignettes/Vignettes_figs/EM3.png)
 ```r
 n_stocks = n_regions = 1
 n_fleets = n_indices = 1
@@ -464,6 +466,7 @@ mods[[3]] = loop_through_fn(om = data,
                             save.sdrep = FALSE)
 ````
 ### EM4: Correct assessment model with NAA random effects and movement fixed as known
+![EM4](https://github.com/lichengxue/wham/blob/mse/mse_vignettes/Vignettes_figs/EM4.png)
 ```r
 n_stocks = n_regions = 2
 n_fleets = n_indices = 2
@@ -497,6 +500,7 @@ mods[[4]] = loop_through_fn(om = data,
                             save.sdrep = FALSE)
 ````
 ### EM5: Assessment model with NAA random effects but no movement
+![EM5](https://github.com/lichengxue/wham/blob/mse/mse_vignettes/Vignettes_figs/EM5.png)
 ```r
 n_stocks = n_regions = 2
 n_fleets = n_indices = 2
@@ -530,6 +534,7 @@ mods[[5]] = loop_through_fn(om = data,
                             save.sdrep = FALSE)
 ````
 ### EM6: Assessment Model with Rec random effects but no movement
+![EM6](https://github.com/lichengxue/wham/blob/mse/mse_vignettes/Vignettes_figs/EM6.png)
 ```r
 n_stocks = n_regions = 2
 n_fleets = n_indices = 2
