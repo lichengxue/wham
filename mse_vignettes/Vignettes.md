@@ -1,6 +1,6 @@
 ## Example 1: Simulation-Estimation
 
-#### 1. Load package and create a folder
+### 1. Load package and create a folder
 ```r
 library(wham)
 main.dir = here::here() 
@@ -12,8 +12,8 @@ if (file.exists(sub.dir)){
 }
 ````
 
-#### 2. Generate basic information 
-The operating model is generated based on user-specified biological and fishery information
+### 2. Generate basic information 
+The operating model is generated based on user-specified biological and fishery information. Here it is worthnoting that the longer burn-in/feedback period you set, the longer runtime it may take to generate your operating model.The "generate_basic_info" function is used to create a list of biological and fishery information that can be used for generating a wham input. This function is designed for the users who don't have an ASAP3.dat file (wham is designed to take an ASAP3.dat file as input, if you have an existing ASAP3.dat file, you can skip this step). Users can define the type of fish life history, lifespan, length-at-age, weight-at-age, maturity-at-age. Users can also set fleet information, survey information, and fishing history.
 ```r
 year_start  <- 2013  # starting year in the burn-in period
 year_end    <- 2022  # end year in the burn-in period
@@ -41,18 +41,35 @@ basic_info <- generate_basic_info(n_stocks   = 2,
                                   mig_type = 0) 
 # see more details in ?generate_basic_info
 ````
-#### 3. Specify movement type
+### 3. Specify movement type and movement rate
+The current version of multi-wham can be only used for the senario of "natal homing", meaning that fish in different regions outside their natal home have to go back during the spawning season. But for the seasons outside their spawning season, they can have probability (i.e. movement rate) to move from their natal home to another region and from other region to their natal home. Users have options to choose different types of movement: (1) unidirectional (only stock1 can move and the rest of stocks can't); (2) all stocks can move (bidirectinal); (3) no movement. Users are allowed to specify the movement rate for each stock. Movement can be constant over years across ages, but can be also specified as changing (treated as random effects) over years (iid_y), over ages (iid_a), over years with an autocorrelation (ar1_y), over years with an autocorrelation (ar1_a).
+
+#### 3a. Specify movement type and movement rate (default: bidirectional)
 ```r
 # Note: default is "bidirectional" movement (e.g. stock 1 move to region 2 and stock 2 move to region 1)
 basic_info <- generate_NAA_where(basic_info = basic_info, move.type = 2)
-````
-#### 4. Configure movement random effects
-```r
 # Note: default is move = 0.3 (constant) for stock1 and 0.1 (constant) for the other stocks
 move <- generate_move(basic_info = basic_info, move.type = 2, move.rate = 0.3, move.re = "constant")
 ````
-
-#### 5. Configure selecitvity, numbers-at-age, and natural mortality random effects
+#### 3b. Specify movement type and movement rate (unidirectional)
+```r
+basic_info <- generate_NAA_where(basic_info = basic_info, move.type = 1) # unidirectional movement 
+move <- generate_move(basic_info = basic_info, move.type = 1, move.re = "constant") # movement rate is constant
+# Users can specify movement rate, default is 0.3 for stock1 and 0 for the rest of stocks
+````
+#### 3c. Specify movement type and movement rate treated as random effects (iid)
+```r
+basic_info <- generate_NAA_where(basic_info = basic_info, move.type = 2, move_rate = 0.3) # unidirectional movement 
+move <- generate_move(basic_info = basic_info, move.type = 2, move.re = "iid_y") # movement rate is iid across years
+````
+#### 3d. Specify movement type and movement rate treated as random effects (ar1)
+```r
+basic_info <- generate_NAA_where(basic_info = basic_info, move.type = 2, move_rate = 0.3) # unidirectional movement 
+move <- generate_move(basic_info = basic_info, move.type = 2, move.re = "ar1_y") # movement rate is ar1 across years
+# Users can specify mean and sigma for movement internally
+````
+### 4. Configure selecitvity, numbers-at-age, and natural mortality random effects
+Modeling selectivity, natural mortality, and NAA as time and/or age varying (treated as random effects) is optional. More details can be found in single-wham (https://timjmiller.github.io/wham/). The default for selectivity and natural mortality is constant, but NAA including recruitment (age 1) is varying (iid). Recruitment is assumed to vary around the mean (default), but users are allowed to use "B-H" or "Ricker" stock-recruitment relationship.
 ```r
 n_stocks  <- as.integer(basic_info['n_stocks'])
 n_regions <- as.integer(basic_info['n_regions'])
@@ -81,23 +98,24 @@ NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
 M <- list(model="constant") # Default is M = 0.2
 # M <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
 ````
-#### 6. Generate wham input 
+### 5. Generate wham input 
 ```r
 input <- prepare_wham_input(basic_info = basic_info, selectivity = sel, M = M, NAA_re = NAA_re, move = move)
 ````
-#### 7. Change mean recruitment para. and variance of NAA random effects (optional)
+### 6. Change mean recruitment para. and variance of NAA random effects (optional)
+Mean recruitment and sigma for all stocks are assumed the same (mean = exp(10) and sigma = exp(0)). Users are allowed to change the mean and sigma for recruitment for each stock as needed. Note that high sigma (e.g. sigma >= 1) may cause the convergence issue in the feedback loop.
 ```r
 input$par$mean_rec_pars[1,1] <- log(exp(10)*2) # Change mean rec for first stock
 input$par$log_N1[1,1,1]      <- log(exp(10)*2) # Change initial N1 for the first stock
 input$par$log_NAA_sigma[]    <- log(0.5) # Change the sigma for NAA (Rec+1) to be log(0.5)
 # Note: sigma for recruitment (sigma1) and numbers at older ages (sigma2) are both 0.5 here.
 ````
-#### 8. Generate the operating model
+### 7. Generate the operating model
 ```r
 om = fit_wham(input, do.fit = F, do.brps = F, MakeADFun.silent = TRUE)
 # Note: do.fit must be FALSE (no modeling fitting yet)
 ````
-#### 9. Self test 
+### 8. Self test 
 ```r
 # Create a function to generate data and do self fitting
 sim_fn <- function(om, self.fit = FALSE){
@@ -114,11 +132,11 @@ set.seed(12345)
 self_sim_fit <- sim_fn(om, self.fit = TRUE)
 check_convergence(self_sim_fit) # check the model convergence
 ````
-#### 10. Create HTML file to view output plots in browser (optional)
+### 9. Create HTML file to view output plots in browser (optional)
 ```r
 plot_wham_output(self_sim_fit, out.type = "html")
 ````
-#### 11. Creates a sub directory and saves .png files (optional)
+### 10. Creates a sub directory and saves .png files (optional)
 ```r
 report.dir <- "report"
 if (file.exists(report.dir)){
@@ -127,7 +145,7 @@ if (file.exists(report.dir)){
 }
 plot_wham_output(self_sim_fit, dir.main = file.path(main.dir, sub.dir, report.dir),out.type = 'png')
 ````
-#### 12. Cross test
+### 11. Cross test
 Different Number-at-age configuration is used in the estimation model 
 ```r
 # EM with different NAA configuration
@@ -145,7 +163,7 @@ em = fit_wham(input, do.fit = F, do.brps = F, MakeADFun.silent = TRUE)
 # Create a function to generate data and do cross fitting
 sim_fn2 <- function(om, em, cross.fit = FALSE){
   input <- em$input
-  input$data = om$simulate(complete=TRUE)
+  input$data = om$simulate(complete=TRUE) # Generate one dataset
   if(cross.fit) {
     fit <- fit_wham(input, do.osa = F, do.retro = F, MakeADFun.silent = T)
     return(fit)
@@ -156,12 +174,12 @@ cross_sim_fit <- sim_fn2(om, em, cross.fit = TRUE)
 # check model convergence
 check_convergence(cross_sim_fit)
 ````
-#### 13. Create HTML file to view output plots in browser (optional)
+### 12. Create HTML file to view output plots in browser (optional)
 ```r
 plot_wham_output(cross_sim_fit, out.type = "html")
 ````
-#### 14. Generate replicates for self test (optional)
-Generating 100 pseudo data is common when performing a self test.
+### 13. Generate replicates for self test (optional)
+Parameters (including random effects parameters) associated with population dynamics are now defined in the operating model. Users can generate pseudo observational data from the operating model with process and observation errors randomly drawn from their corresponding likelihood distribution. Generating 100 pseudo data is common when performing a self test.
 ```r
 nsim = 100 
 set.seed(8675309) 
@@ -209,7 +227,7 @@ SSB = lapply(1:nsim, function(x){
 print(SSB)
 ````
 ## Example 2: Management strategy evaluation
-#### 1. Create a folder to save your results
+### 1. Create a folder to save your results
 ```r
 main.dir = here::here()
 # install.packages(file.path(main.dir,"wham"), repos = NULL, type = "source")
@@ -221,7 +239,7 @@ if (file.exists(sub.dir)){
   dir.create(file.path(main.dir,sub.dir))
 }
 ````
-#### 2. Prepare WHAM input
+### 2. Prepare WHAM input
 ```r
 year_start  <- 2013  # starting year in the burn-in period
 year_end    <- 2022  # end year in the burn-in period
@@ -249,17 +267,14 @@ basic_info <- generate_basic_info(n_stocks   = 2,
                                   mig_type = 0) 
 # see more details in ?generate_basic_info
 ````
-#### 3. Specify movement type
+### 3. Specify movement type and movement rate
 ```r
 # Note: default is "bidirectional" movement (e.g. stock 1 move to region 2 and stock 2 move to region 1)
 basic_info <- generate_NAA_where(basic_info = basic_info, move.type = 2)
-````
-#### 4. Configure movement random effects
-```r
 # Note: default is move = 0.3 (constant) for stock1 and 0.1 (constant) for the other stocks
 move <- generate_move(basic_info = basic_info, move.type = 2, move.rate = 0.3, move.re = "constant")
 ````
-#### 5. Configure selecitvity, numbers-at-age, and natural mortality random effects
+### 4. Configure selecitvity, numbers-at-age, and natural mortality random effects
 ```r
 n_stocks  <- as.integer(basic_info['n_stocks'])
 n_regions <- as.integer(basic_info['n_regions'])
@@ -287,29 +302,30 @@ NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
 # M <- list(model="constant") # Default is M = 0.2
 M <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
 ````
-#### 6. Generate wham input 
+### 5. Generate wham input 
 ```r
 input <- prepare_wham_input(basic_info = basic_info, selectivity = sel, M = M, NAA_re = NAA_re, move = move)
 ```
-#### 7. Change mean recruitment para. and variance of NAA random effects
+### 6. Change mean recruitment para. and variance of NAA random effects
 ```r
 input$par$mean_rec_pars[1,1] <- log(exp(10)*2) # Change mean rec for first stock
 input$par$log_N1[1,1,1]      <- log(exp(10)*2) # Change initial N1 for the first stock
 input$par$log_NAA_sigma[]    <- log(0.2) # Change the sigma for NAA (Rec+1) to be log(0.5)
 ````
-#### 8. Assign weights based on mean recruitment to calculate global SPR-based reference points
+### 7. Assign weights based on mean recruitment to calculate global SPR-based reference points
+The SPR-based biological reference point in multi-wham is a weighted average based on the mean recruitment of each stock. The default is SPR(stock1) and SPR(stock2) are equally weighted. But users should change SPR weights if the mean recruitment for each stock is different. This step is only needed when generating the operating model. In the feedback loop, the weights will be automatically calculated given the mean recruitment estimated from the assessment model.
 ```r
 # Global SPR is calculated based on weights of mean rec par 
 input$data$SPR_weight_type = 1
 input$data$SPR_weights     = c(2/3,1/3)
 input$data$do_SPR_BRPs     = 1
 ````
-#### 9. Generate the operating model
+### 8. Generate the operating model
 ```r
 om = fit_wham(input, do.fit = F, do.brps = T, MakeADFun.silent = TRUE)
 saveRDS(om,file.path(sub.dir,"om.RDS")) # save the OM 
 ````
-#### 10. Generate datasets
+### 9. Generate datasets
 ```r
 data <- generate_data(om, seed = 123)
 # Generate 100 datasets
@@ -323,17 +339,23 @@ data <- generate_data(om, seed = 123)
 #   return(input_i)
 # })
 ````
-#### 11. MSE information
+### 10. Specify assessment interval and assessment year in the feedback loop
+Users can specify the assessment interval for the feedback period. For medium-lived groundfish stock, an assessment interval of 3 years is typically common in the northeast region. It should be noted that the shorter assessment interval, the longer runtime it may take for the whole feedback period.
 ```r
 assess.interval = 3 # Assessment interval
 base.years      = year_start:year_end # Burn-in period
 first.year      = head(base.years,1)
 terminal.year   = tail(base.years,1)
 assess.years    = seq(terminal.year, tail(om$years,1)-assess.interval,by = assess.interval)
-# Create a list to save the MSE results
+````
+Create a list to save the MSE results
+```r
 mods <- list()
 ````
-### EM1: Separate Assessment Models with NAA Random Effects
+### 11. Performe Management Strategy Evaluation
+The code below does a closed-loop simulation with operating model, fitting an estimating model, generating catch advice and incorporating it into the operating model.
+#### EM1: Separate assessment models with NAA random effects
+Fit separate assessment models for each stock like traditional single-stock assessment
 ```r
 n_stocks = n_regions = n_fleets = n_indices = 1
 sel_em <- list(model=rep("logistic",n_fleets+n_indices),
@@ -360,7 +382,7 @@ mods[[1]] = loop_through_fn(om = data,
                             seed = 123,
                             save.sdrep = FALSE)
 ````
-### EM2: One Assessment Model (Fleets-as-areas) with NAA Random Effects
+#### EM2: Assessment model (spatially-implicit fleets-as-areas) with NAA Random Effects
 ```r
 n_stocks = n_regions = 1
 n_fleets = n_indices = 2
@@ -388,7 +410,7 @@ mods[[2]] = loop_through_fn(om = data,
                             seed = 123,
                             save.sdrep = FALSE)
 ````
-### EM3: One Assessment Model (Aggregate Catch) with NAA Random Effects
+### EM3: Assessment model (catch and survey aggregated) with NAA Random Effects
 ```r
 n_stocks = n_regions = 1
 n_fleets = n_indices = 1
@@ -416,7 +438,7 @@ mods[[3]] = loop_through_fn(om = data,
                             seed = 123,
                             save.sdrep = FALSE)
 ````
-### EM4: Correct Assessment Model with NAA Random Effects and Movement Fixed as Known
+### EM4: Correct assessment model with NAA random effects and movement fixed as known
 ```r
 n_stocks = n_regions = 2
 n_fleets = n_indices = 2
@@ -449,7 +471,7 @@ mods[[4]] = loop_through_fn(om = data,
                             seed = 123,
                             save.sdrep = FALSE)
 ````
-### EM5: Assessment Model with NAA Random Effects but No Movement
+### EM5: Assessment model with NAA random effects but no movement
 ```r
 n_stocks = n_regions = 2
 n_fleets = n_indices = 2
@@ -482,7 +504,7 @@ mods[[5]] = loop_through_fn(om = data,
                             seed = 123,
                             save.sdrep = FALSE)
 ````
-### EM6: Assessment Model with Rec Random Effects but no Movement
+### EM6: Assessment Model with Rec random effects but no movement
 ```r
 n_stocks = n_regions = 2
 n_fleets = n_indices = 2
