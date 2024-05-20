@@ -515,7 +515,7 @@ mods[[6]] = loop_through_fn(om = data,
                             seed = 123,
                             save.sdrep = FALSE)
 ````
-### Plot MSE output
+### Plot MSE Output
 ```r
 m <- list()
 m[[1]] <- list(mods[[1]],mods[[2]],mods[[3]],mods[[4]],mods[[5]],mods[[6]])
