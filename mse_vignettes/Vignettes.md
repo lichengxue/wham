@@ -380,6 +380,7 @@ mods <- list()
 The code below does a closed-loop simulation with operating model, fitting an estimating model, generating catch advice and incorporating it into the operating model.
 #### EM1: Separate assessment models with NAA random effects
 Fit separate assessment models for each stock like traditional single-stock assessment
+![EM1](https://github.com/lichengxue/wham/blob/mse/mse_vignettes/Vignettes_figs/EM1.png)
 ```r
 n_stocks = n_regions = n_fleets = n_indices = 1
 sel_em <- list(model=rep("logistic",n_fleets+n_indices),
