@@ -150,7 +150,7 @@ Create a list to save the MSE results
 ```r
 mods <- list()
 ````
-### 11. Performe Management Strategy Evaluation
+## 11. Perform Management Strategy Evaluation
 The code below does a closed-loop simulation with operating model, fitting an estimating model, generating catch advice and incorporating it into the operating model.
 ### EM1: Separate panmictic assessment models with NAA random effects
 Fit separate assessment models for each stock like traditional single-stock assessment
