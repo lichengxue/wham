@@ -380,6 +380,6 @@ plot_mse_output(m, main.dir = main.dir) # plots should now be saved in main.dir
 #### Fig.2 Model performance of stock status
 ![Fig.2](https://github.com/lichengxue/wham/blob/mse/mse_vignettes/Report/Stock_Status_Performance_last_6years.PNG)
 #### Fig.3 Model performance in a radar chart
-![Fig.3](https://github.com/lichengxue/wham/blob/mse/mse_vignettes/Report/Radar_chart_last_6years.png)
+![Fig.3](https://github.com/lichengxue/wham/assets/43245366/001531ab-4f39-481c-b893-3274592b60f3)
 
 #### More Figures are produced by the plot_mse_output() function, check ?plot_mse_output() for more details.
