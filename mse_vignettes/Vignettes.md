@@ -388,7 +388,7 @@ mods[[2]] = loop_through_fn(om = data,
                             seed = 123,
                             save.sdrep = FALSE)
 ````
-### EM3: One Assessment Model with Aggregate Catch and with NAA Random Effects
+### EM3: One Assessment Model (Aggregate Catch) with NAA Random Effects
 ```r
 n_stocks = n_regions = 1
 n_fleets = n_indices = 1
