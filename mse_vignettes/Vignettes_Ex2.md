@@ -152,6 +152,19 @@ mods <- list()
 ````
 ## 11. Perform Management Strategy Evaluation
 The code below does a closed-loop simulation with operating model, fitting an estimating model, generating catch advice and incorporating it into the operating model.
+
+The table shown below describes the options of assessment model in the mse package
+
+| Model           |                    Type                 |  Number of models  |    Movement    | Random effects  |    Reference point  |                         Description                             |  
+|:----------------|:----------------------------------------|:-------------------|:---------------|:----------------|:--------------------|:----------------------------------------------------------------|
+| EM1             |  Panmictic                              | Number of regions  | No             | NAA             | No global SPR-based |Separate/independent single stock assessment model               |
+| EM2             |  Spatially implicit (fleets-as-areas)   | One                | No             | NAA             | No global SPR-based |Multiple fleets account for spatial difference in fleet structure|
+| EM3             |  Panmictic (catch aggregated)           | One                | No             | NAA             | No global SPR-based |Fleet aggregated across regions                                  |
+| EM4             |  Spatially explicit                     | Number of regions  | Yes (fixed)    | NAA             | Global SPR-based    |Movement rate is fixed as known                                  |
+| EM5             |  Spatially explicit                     | Number of regions  | No             | NAA             | Global SPR-based    |Movement is not included                                         |
+| EM6             |  Spatially explicit                     | Number of regions  | No             | Rec             | Global SPR-based    |Movement is not included                                         |
+| EM7             |  Spatially explicit                     | Number of regions  | Yes (estimated)| NAA             | Global SPR-based    |Movement rate is estimated with a prior and standard deviation   |
+
 ### EM1: Separate panmictic assessment models with NAA random effects
 Fit separate assessment models for each stock like traditional single-stock assessment
 ![EM1](https://github.com/lichengxue/wham/blob/mse/mse_vignettes/Vignettes_figs/EM1.png)
