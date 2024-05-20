@@ -5,8 +5,8 @@
 # -----------------------------------------------------------------------------
 
 main.dir = here::here()
-# devtools::install_local(file.path(main.dir,"wham"), dependencies = TRUE)
 # install.packages(file.path(main.dir,"wham"), dependencies = TRUE, repos = NULL, type = "source")
+# devtools::install_local(file.path(main.dir,"wham"), dependencies = TRUE)
 
 library(wham)
 # roxygen2::roxygenize(file.path(main.dir,"wham"))
