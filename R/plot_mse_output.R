@@ -17,6 +17,7 @@ plot_mse_output <- function(mods, main.dir = getwd(), use.n.years = 10, dpi = 15
   require(ggplot2)
   require(dplyr)
   require(tidyr)
+  require(fmsb)
   sub.dir <- 'Report'
   if (file.exists(sub.dir)){
   } else {
@@ -825,7 +826,7 @@ plot_mse_output <- function(mods, main.dir = getwd(), use.n.years = 10, dpi = 15
   # min_values = apply(df[,-1],2,min)
   # Plot radar plots for each model and combine them
   png(file.path(main.dir,sub.dir,paste0("Radar_chart_last_",use.n.years,"years.png")),width = 7, height = 7, units = "in", res = dpi)
-  fmsb::radarchart(
+  radarchart(
     df[,-1], axistype=0 , maxmin=F,
     #custom polygon
     plwd=4 , plty=1, 
