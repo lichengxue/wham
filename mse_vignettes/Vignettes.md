@@ -378,7 +378,7 @@ mods <- list()
 ````
 ### 11. Performe Management Strategy Evaluation
 The code below does a closed-loop simulation with operating model, fitting an estimating model, generating catch advice and incorporating it into the operating model.
-#### EM1: Separate assessment models with NAA random effects
+#### EM1: Separate panmictic assessment models with NAA random effects
 Fit separate assessment models for each stock like traditional single-stock assessment
 ![EM1](https://github.com/lichengxue/wham/blob/mse/mse_vignettes/Vignettes_figs/EM1.png)
 ```r
@@ -407,7 +407,7 @@ mods[[1]] = loop_through_fn(om = data,
                             seed = 123,
                             save.sdrep = FALSE)
 ````
-#### EM2: Assessment model (spatially-implicit fleets-as-areas) with NAA Random Effects
+#### EM2: One assessment model (spatially-implicit fleets-as-areas) with NAA Random Effects
 ![EM2](https://github.com/lichengxue/wham/blob/mse/mse_vignettes/Vignettes_figs/EM2.png)
 ```r
 n_stocks = n_regions = 1
@@ -436,7 +436,8 @@ mods[[2]] = loop_through_fn(om = data,
                             seed = 123,
                             save.sdrep = FALSE)
 ````
-### EM3: Assessment model (catch and survey aggregated) with NAA Random Effects
+### EM3: One panmictic assessment model (catch and survey aggregated) with NAA Random Effects
+The partitioning of a total catch is based on the mean recruitment of each stock.
 ![EM3](https://github.com/lichengxue/wham/blob/mse/mse_vignettes/Vignettes_figs/EM3.png)
 ```r
 n_stocks = n_regions = 1
@@ -499,7 +500,7 @@ mods[[4]] = loop_through_fn(om = data,
                             seed = 123,
                             save.sdrep = FALSE)
 ````
-### EM5: Assessment model with NAA random effects but no movement
+### EM5: Assessment model (spatially explicit) with NAA random effects but no movement
 ![EM5](https://github.com/lichengxue/wham/blob/mse/mse_vignettes/Vignettes_figs/EM5.png)
 ```r
 n_stocks = n_regions = 2
@@ -533,7 +534,7 @@ mods[[5]] = loop_through_fn(om = data,
                             seed = 123,
                             save.sdrep = FALSE)
 ````
-### EM6: Assessment Model with Rec random effects but no movement
+### EM6: Assessment Model (spatially explicit) with Rec random effects but no movement
 ![EM6](https://github.com/lichengxue/wham/blob/mse/mse_vignettes/Vignettes_figs/EM6.png)
 ```r
 n_stocks = n_regions = 2
