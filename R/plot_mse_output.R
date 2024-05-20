@@ -254,7 +254,7 @@ plot_mse_output <- function(mods, main.dir = getwd(), use.n.years = 10, dpi = 15
     
     p <- ggpubr::ggarrange(p1,p2,p3,p4,common.legend = TRUE,legend = "right")
     ggsave(file.path(main.dir,sub.dir,paste0("Performance_last_",use.n.years,"years.PNG")), p, width = 15, height = 10, dpi = dpi)
-
+    
   } else { # Compare models over x realizations
     # --------------------------------------------------------------------------
     # --------------------------------------------------------------------------
@@ -314,7 +314,7 @@ plot_mse_output <- function(mods, main.dir = getwd(), use.n.years = 10, dpi = 15
       }
     }
     res <- tidyr::pivot_longer(res,cols = starts_with(var),names_to = "Label", values_to = var)
-
+    
     p1 <- ggplot(res, aes(x = Model, y=!! rlang::sym(var),col = Model)) +
       geom_boxplot() +
       facet_grid(Label ~., scales = "free") + 
@@ -353,7 +353,7 @@ plot_mse_output <- function(mods, main.dir = getwd(), use.n.years = 10, dpi = 15
       ggtitle(paste0("Fleet-specific F"," (over last ",use.n.years," years)")) +
       ylab("F") +
       theme_bw()
-    ggsave(file.path(main.dir,sub.dir,paste0(var,"_last_",use.n.years,"years.PNG")), p1, width = 10, height = 7, dpi = dpi)
+    ggsave(file.path(main.dir,sub.dir,paste0(var,"_last_",use.n.years,"years.PNG")), p2, width = 10, height = 7, dpi = dpi)
     
     # ----------------------------------------------------------------------------
     var = "Catch_s"
@@ -385,7 +385,7 @@ plot_mse_output <- function(mods, main.dir = getwd(), use.n.years = 10, dpi = 15
       ggtitle(paste0("Stock-specific Catch"," (over last ",use.n.years," years)")) +
       ylab("Catch") +
       theme_bw()
-    ggsave(file.path(main.dir,sub.dir,paste0(var,"_last_",use.n.years,"years.PNG")), p1, width = 10, height = 7, dpi = dpi)
+    ggsave(file.path(main.dir,sub.dir,paste0(var,"_last_",use.n.years,"years.PNG")), p3, width = 10, height = 7, dpi = dpi)
     
     #--------------------------------------------------------------------------------
     var = "Catch_r"
@@ -418,7 +418,7 @@ plot_mse_output <- function(mods, main.dir = getwd(), use.n.years = 10, dpi = 15
       ylab("Catch") +
       theme_bw()
     
-    ggsave(file.path(main.dir,sub.dir,paste0(var,"_last_",use.n.years,"years.PNG")), p1, width = 10, height = 7, dpi = dpi)
+    ggsave(file.path(main.dir,sub.dir,paste0(var,"_last_",use.n.years,"years.PNG")), p4, width = 10, height = 7, dpi = dpi)
     
     p <- ggpubr::ggarrange(p1,p2,p3,p4,common.legend = TRUE,legend = "right")
     ggsave(file.path(main.dir,sub.dir,paste0("Performance_last_",use.n.years,"years.PNG")), p, width = 15, height = 10, dpi = dpi)
@@ -661,21 +661,21 @@ plot_mse_output <- function(mods, main.dir = getwd(), use.n.years = 10, dpi = 15
     return(data)
   }
   
-  var = "SSB"
-  res = NULL
-  for (i in 1:length(mods)){
-      tmp <- extract_var(mods[[i]],var)
-      if (is.null(use.n.years)) {
-        tmp <- tail(tmp,5)
-      } else {
-        tmp <- tail(tmp,use.n.years)
-      }
-      tmp <- data.frame(t(colSums(tmp)))
-      tmp$nsim <- i
-      tmp$Model <- paste("Model",j)
-      res <- rbind(res, tmp)
-  }
-  res1 <- tidyr::pivot_longer(res,cols = starts_with(var),names_to = "Index", values_to = "Value")
+  # var = "SSB"
+  # res = NULL
+  # for (i in 1:length(mods)){
+  #   tmp <- extract_var(mods[[i]],var)
+  #   if (is.null(use.n.years)) {
+  #     tmp <- tail(tmp,5)
+  #   } else {
+  #     tmp <- tail(tmp,use.n.years)
+  #   }
+  #   tmp <- data.frame(t(colSums(tmp)))
+  #   tmp$nsim <- i
+  #   tmp$Model <- paste("Model",j)
+  #   res <- rbind(res, tmp)
+  # }
+  # res1 <- tidyr::pivot_longer(res,cols = starts_with(var),names_to = "Index", values_to = "Value")
   
   
   var = "SSB"
@@ -828,15 +828,14 @@ plot_mse_output <- function(mods, main.dir = getwd(), use.n.years = 10, dpi = 15
   fmsb::radarchart(
     df[,-1], axistype=0 , maxmin=F,
     #custom polygon
-    plwd=4 , plty=1,
+    plwd=4 , plty=1, 
     #custom the grid
     cglcol="grey", cglty=1, axislabcol="black", cglwd=0.8, 
     #custom labels
     vlcex=0.8 )
-  legend(x=-1.4, y=1.2, legend = rownames(df), bty = "n", pch=20 , col=1:8 , text.col = "grey", cex=0.8, pt.cex=2)
+  legend(x=-1.4, y=1.2, legend = rownames(df), bty = "n", pch=20, col=1:8, text.col = "grey", cex=0.8, pt.cex=2)
   dev.off()
   
-  cat("Report is done!")
-  
+  cat("Report is done! \n")
+  cat(paste0("Report has been save in ",file.path(main.dir,sub.dir)))
 }
-
