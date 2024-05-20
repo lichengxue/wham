@@ -825,7 +825,7 @@ plot_mse_output <- function(mods, main.dir = getwd(), use.n.years = 10, dpi = 15
   # max_values = apply(df[,-1],2,max)
   # min_values = apply(df[,-1],2,min)
   # Plot radar plots for each model and combine them
-  tiff(file.path(main.dir,sub.dir,paste0("Radar_chart_last_",use.n.years,"years.tiff")),width = 7, height = 7, units = "in", res = dpi)
+  png(file.path(main.dir,sub.dir,paste0("Radar_chart_last_",use.n.years,"years.png")),width = 7, height = 7, units = "in", res = dpi)
   radarchart(
     df[,-1], axistype=0 , maxmin=F,
     #custom polygon
