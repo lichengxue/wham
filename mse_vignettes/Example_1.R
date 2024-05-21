@@ -28,7 +28,7 @@ if (file.exists(sub.dir)){
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 
-year_start  <- 2013  # starting year in the burn-in period
+year_start  <- 2003  # starting year in the burn-in period
 year_end    <- 2022  # end year in the burn-in period
 MSE_years   <- 0     # number of years in the feedback loop
 
@@ -46,7 +46,8 @@ basic_info <- generate_basic_info(n_stocks   = 2,
                                   q = 0.2, 
                                   F_info     = list(F.year1 = 0.2, Fhist = "constant"), 
                                   catch_info = list(catch_cv = 0.1, catch_Neff = 200), 
-                                  index_info = list(index_cv = 0.2, index_Neff = 100, fracyr_indices = 0.5), fracyr_spawn = 0.5, 
+                                  index_info = list(index_cv = 0.2, index_Neff = 100, fracyr_indices = 0.5), 
+                                  fracyr_spawn = 0.5, 
                                   bias.correct.process     = FALSE, 
                                   bias.correct.observation = FALSE, 
                                   bias.correct.BRPs        = FALSE, 
@@ -106,12 +107,15 @@ sim_fn <- function(om, self.fit = FALSE){
   input <- om$input
   input$data = om$simulate(complete=TRUE)
   if(self.fit) {
-    fit <- fit_wham(input, do.osa = F, do.retro = F, MakeADFun.silent = T)
+    fit <- fit_wham(input, do.osa = FALSE, do.retro = FALSE, MakeADFun.silent = FALSE)
     return(fit)
   } else return(input) 
 }
 set.seed(12345)
 self_sim_fit <- sim_fn(om, self.fit = TRUE)
+
+# Check model convergence
+check_convergence(self_sim_fit)
 
 # Create HTML file to view output plots in browser
 plot_wham_output(self_sim_fit, out.type = "html")
@@ -146,12 +150,15 @@ sim_fn2 <- function(om, em, cross.fit = FALSE){
   input <- em$input
   input$data = om$simulate(complete=TRUE)
   if(cross.fit) {
-    fit <- fit_wham(input, do.osa = F, do.retro = F, MakeADFun.silent = T)
+    fit <- fit_wham(input, do.osa = FALSE, do.retro = FALSE, MakeADFun.silent = FALSE)
     return(fit)
   } else return(input) 
 }
 set.seed(12345)
 cross_sim_fit <- sim_fn2(om, em, cross.fit = TRUE)
+
+# Check model convergence
+check_convergence(cross_sim_fit)
 
 # Create HTML file to view output plots in browser
 plot_wham_output(cross_sim_fit, out.type = "html")

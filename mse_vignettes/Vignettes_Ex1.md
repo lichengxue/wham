@@ -62,7 +62,7 @@ if (file.exists(sub.dir)){
 ### 2. Generate basic information 
 The operating model is generated based on user-specified biological and fishery information. Here it is worthnoting that the longer burn-in/feedback period you set, the longer runtime it may take to generate your operating model.The "generate_basic_info" function is used to create a list of biological and fishery information that can be used for generating a wham input. This function is designed for the users who don't have an ASAP3.dat file (wham is designed to take an ASAP3.dat file as input, if you have an existing ASAP3.dat file, you can skip this step). Users can define the type of fish life history, lifespan, length-at-age, weight-at-age, maturity-at-age. Users can also set fleet information, survey information, and fishing history.
 ```r
-year_start  <- 2013  # starting year in the burn-in period
+year_start  <- 2003  # starting year in the burn-in period
 year_end    <- 2022  # end year in the burn-in period
 MSE_years   <- 0     # number of years in the feedback loop
 # Note: no need to include MSE_years in simulation-estimation 
@@ -81,7 +81,8 @@ basic_info <- generate_basic_info(n_stocks   = 2,
                                   q = 0.2, 
                                   F_info     = list(F.year1 = 0.2, Fhist = "constant"), 
                                   catch_info = list(catch_cv = 0.1, catch_Neff = 200), 
-                                  index_info = list(index_cv = 0.2, index_Neff = 100, fracyr_indices = 0.5), fracyr_spawn = 0.5, 
+                                  index_info = list(index_cv = 0.2, index_Neff = 100, fracyr_indices = 0.5),
+                                  fracyr_spawn = 0.5, 
                                   bias.correct.process     = FALSE, 
                                   bias.correct.observation = FALSE, 
                                   bias.correct.BRPs        = FALSE, 
@@ -169,7 +170,7 @@ sim_fn <- function(om, self.fit = FALSE){
   input <- om$input
   input$data = om$simulate(complete=TRUE)
   if(self.fit) {
-    fit <- fit_wham(input, do.osa = F, do.retro = F, do.osa = FALSE, do.retro = FALSE, MakeADFun.silent = T)
+    fit <- fit_wham(input, do.osa = FALSE, do.retro = FALSE, MakeADFun.silent = FALSE)
     return(fit)
   } else return(input) 
 }
@@ -210,9 +211,9 @@ em = fit_wham(input, do.fit = F, do.brps = F, MakeADFun.silent = TRUE)
 # Create a function to generate data and do cross fitting
 sim_fn2 <- function(om, em, cross.fit = FALSE){
   input <- em$input
-  input$data = om$simulate(complete=TRUE) # Generate one dataset
+  input$data = om$simulate(complete=TRUE)
   if(cross.fit) {
-    fit <- fit_wham(input, do.osa = F, do.retro = F, MakeADFun.silent = T)
+    fit <- fit_wham(input, do.osa = FALSE, do.retro = FALSE, MakeADFun.silent = FALSE)
     return(fit)
   } else return(input) 
 }
