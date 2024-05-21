@@ -1,11 +1,19 @@
 # Background
 The “multi-wham-mse” package is used to perform management strategy evaluation (MSE) in the situation where population structure is complex (e.g. multiple stocks in multiple regions) with different movement dynamics (e.g. natal homing). This package is designed specifically for the Woods Hole Assessment Model (WHAM), a state-space age-structured stock assessment model. So far, WHAM can incorporate multiple sources of process errors (treated as random effects) such as deviations in (1) recruitment/numbers-at-age, (2) selectivity, (3) natural mortality, (4) catchability, and (5) movement. WHAM is also capable of including environmental effects on population processes. 
-## Download "multi-wham-mse" package 
+## Download "multi-wham-mse" package (for git users)
 You can download the “mse” branch of the “wham” package from Github by following the steps below:
 #### 1. Open "Command Prompt" in your local computer.
 #### 2. Type "cd directory" here you can type a specific path (replace "directory") to save the package (you can also skip this step and the package will be saved in the main directory). 
 #### 3. Type "git clone -b mse https://github.com/lichengxue/wham.git".
 #### 4. Close the Command and check if the package has been saved in the directory.
+
+## Download "multi-wham-mse" package (for non-git users)
+You can download the “mse” branch of the “wham” package from Github by following the steps below:
+#### 1. Open your browser and go to: https://github.com/lichengxue/wham/tree/mse
+#### 2. Select the green "Code" button on the main page. 
+#### 3. Once the dropdown menu appears, select Download ZIP to download the mse package.
+#### 4. Upzip the package, you should see all content are saved in "your_path/wham-mse/wham-mse" (Note: There are two folders with exact same name!)
+#### 5. Create a new folder, rename as "wham", move all the content from your_path/wham-mse/wham-mse to this new folder for the later installation.
 
 ## Install "multi-wham-mse" package
 For the users who are installing "wham" for the first time:

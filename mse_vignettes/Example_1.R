@@ -4,7 +4,9 @@
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 
-main.dir = here::here()
+# main.dir = here::here()
+main.dir = "where/you/save/your/wham/package"
+
 # install.packages(file.path(main.dir,"wham"), dependencies = TRUE, repos = NULL, type = "source")
 # devtools::install_local(file.path(main.dir,"wham"), dependencies = TRUE)
 
