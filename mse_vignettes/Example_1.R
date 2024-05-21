@@ -11,6 +11,7 @@ main.dir = "where/you/save/your/wham/package"
 # devtools::install_local(file.path(main.dir,"wham"), dependencies = TRUE)
 
 library(wham)
+
 # roxygen2::roxygenize("wham")
 
 # Create a folder to save your results
@@ -162,7 +163,7 @@ plot_wham_output(cross_sim_fit, out.type = "html")
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 
-nsim = 5
+nsim = 3
 set.seed(8675309) 
 sim_input = list()
 sim_input = lapply(1:nsim, function(x) {
@@ -182,7 +183,7 @@ sim_fits = lapply(1:nsim, function(x){
 })
 
 # Summarize results 
-conv = sapply(1:n_sim, function(x){
+conv = sapply(1:nsim, function(x){
   if (length(sim_fits[[x]]) != 0) {
     if (sim_fits[[x]]$is_sdrep & !sim_fits[[x]]$na_sdrep & !sim_fits[[x]]$hessian) {
       conv = TRUE } else conv = FALSE
@@ -191,7 +192,7 @@ conv = sapply(1:n_sim, function(x){
 })
 cat(paste("Convergence rate:", sum(conv)/nsim))
 
-mean_rec_par = lapply(1:n_sim, function(x){
+mean_rec_par = lapply(1:nsim, function(x){
   mean_rec_par_est = sim_fits[[x]]$parList$mean_rec_pars[,1]
   mean_rec_par_true = sim_fits[[x]]$input$par$mean_rec_pars[,1]
   mean_rec_par = cbind(mean_rec_par_est,mean_rec_par_true)
@@ -199,7 +200,7 @@ mean_rec_par = lapply(1:n_sim, function(x){
 })
 print(mean_rec_par)
 
-SSB = lapply(1:n_sim, function(x){
+SSB = lapply(1:nsim, function(x){
   SSB_est = sim_fits[[x]]$rep$SSB
   SSB_true = sim_fits[[x]]$input$data$SSB
   SSB = cbind(SSB_est, SSB_true)

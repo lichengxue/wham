@@ -11,6 +11,7 @@ main.dir = "where/you/save/your/wham/package"
 # devtools::install_local(file.path(main.dir,"wham"), dependencies = TRUE)
 
 library(wham)
+
 # roxygen2::roxygenize(file.path(main.dir,"wham"))
 
 # Create a folder to save your results
@@ -103,7 +104,7 @@ om = fit_wham(input, do.fit = F, do.brps = T, MakeADFun.silent = TRUE)
 saveRDS(om,file.path(sub.dir,"om.RDS"))
 
 # Generate datasets
-data <- update_om_fn(om, seed = 123)
+data <- generate_data(om, seed = 123)
 # nsim = 10
 # set.seed(12345) 
 # sim_input = list()
@@ -129,24 +130,29 @@ mods <- list()
 # -----------------------------------------------------------------------------
 
 n_stocks = n_regions = n_fleets = n_indices = 1
-sel <- list(model=rep("logistic",n_fleets+n_indices),
-            initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)),
-            fix_pars=rep(list(NULL),n_fleets+n_indices))
-NAA_re <- list(N1_model="equilibrium",sigma="rec+1",cor="iid")
-M <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
+sel_em <- list(model=rep("logistic",n_fleets+n_indices),
+               initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)),
+               fix_pars=rep(list(NULL),n_fleets+n_indices))
+NAA_re_em <- list(N1_model="equilibrium",sigma="rec+1",cor="iid")
+M_em <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
 
-mods[[1]] = loop_through_fn2(om = data, 
-                             M_em = M, 
-                             sel_em = sel, 
-                             NAA_re_em = NAA_re, 
-                             move_em = NULL,
-                             em.opt = list(separate.em = TRUE, separate.em.type = 1, do.move = FALSE, est.move = FALSE),
-                             assess_years = assess.years, 
-                             assess_interval = assess.interval, 
-                             base_years = base.years,
-                             year.use = 10, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
-                             seed = 123,
-                             save.sdrep = TRUE)
+mods[[1]] = loop_through_fn(om = data, 
+                            M_om = M,
+                            sel_om = sel, 
+                            NAA_re_om = NAA_re, 
+                            mean_rec_weights = c(2/3,1/3),
+                            move_om = move,
+                            M_em = M_em, 
+                            sel_em = sel_em, 
+                            NAA_re_em = NAA_re_em, 
+                            move_em = NULL,
+                            em.opt = list(separate.em = TRUE, separate.em.type = 1, do.move = FALSE, est.move = FALSE),
+                            assess_years = assess.years, 
+                            assess_interval = assess.interval, 
+                            base_years = base.years,
+                            year.use = 10, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
+                            seed = 123,
+                            save.sdrep = FALSE)
 
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
@@ -156,24 +162,29 @@ mods[[1]] = loop_through_fn2(om = data,
 
 n_stocks = n_regions = 1
 n_fleets = n_indices = 2
-sel <- list(model=rep("logistic",n_fleets+n_indices),
-            initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)),
-            fix_pars=rep(list(NULL),n_fleets+n_indices))
-NAA_re <- list(N1_model="equilibrium",sigma="rec+1",cor="iid")
-M <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
+sel_em <- list(model=rep("logistic",n_fleets+n_indices),
+               initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)),
+               fix_pars=rep(list(NULL),n_fleets+n_indices))
+NAA_re_em <- list(N1_model="equilibrium",sigma="rec+1",cor="iid")
+M_em <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
 
-mods[[2]] = loop_through_fn2(om = data, 
-                             M_em = M, 
-                             sel_em = sel, 
-                             NAA_re_em = NAA_re, 
-                             move_em = NULL,
-                             em.opt = list(separate.em = TRUE, separate.em.type = 2, do.move = FALSE, est.move = FALSE),
-                             assess_years = assess.years, 
-                             assess_interval = assess.interval, 
-                             base_years = base.years,
-                             year.use = 10, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
-                             seed = 123,
-                             save.sdrep = TRUE)
+mods[[2]] = loop_through_fn(om = data, 
+                            M_om = M,
+                            sel_om = sel, 
+                            NAA_re_om = NAA_re, 
+                            mean_rec_weights = c(2/3,1/3),
+                            move_om = move,
+                            M_em = M_em, 
+                            sel_em = sel_em, 
+                            NAA_re_em = NAA_re_em, 
+                            move_em = NULL,
+                            em.opt = list(separate.em = TRUE, separate.em.type = 2, do.move = FALSE, est.move = FALSE),
+                            assess_years = assess.years, 
+                            assess_interval = assess.interval, 
+                            base_years = base.years,
+                            year.use = 10, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
+                            seed = 123,
+                            save.sdrep = FALSE)
 
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
@@ -183,24 +194,29 @@ mods[[2]] = loop_through_fn2(om = data,
 
 n_stocks = n_regions = 1
 n_fleets = n_indices = 1
-sel <- list(model=rep("logistic",n_fleets+n_indices),
-            initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)),
-            fix_pars=rep(list(NULL),n_fleets+n_indices))
-NAA_re <- list(N1_model="equilibrium",sigma="rec+1",cor="iid")
-M <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
+sel_em <- list(model=rep("logistic",n_fleets+n_indices),
+               initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)),
+               fix_pars=rep(list(NULL),n_fleets+n_indices))
+NAA_re_em <- list(N1_model="equilibrium",sigma="rec+1",cor="iid")
+M_em <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
 
-mods[[3]] = loop_through_fn2(om = data, 
-                             M_em = M, 
-                             sel_em = sel, 
-                             NAA_re_em = NAA_re, 
-                             move_em = NULL,
-                             em.opt = list(separate.em = TRUE, separate.em.type = 3, do.move = FALSE, est.move = FALSE),
-                             assess_years = assess.years, 
-                             assess_interval = assess.interval, 
-                             base_years = base.years,
-                             year.use = 10, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
-                             seed = 123,
-                             save.sdrep = TRUE)
+mods[[3]] = loop_through_fn(om = data, 
+                            M_om = M,
+                            sel_om = sel, 
+                            NAA_re_om = NAA_re, 
+                            mean_rec_weights = c(2/3,1/3),
+                            move_om = move,
+                            M_em = M_em, 
+                            sel_em = sel_em, 
+                            NAA_re_em = NAA_re_em, 
+                            move_em = NULL,
+                            em.opt = list(separate.em = TRUE, separate.em.type = 3, do.move = FALSE, est.move = FALSE),
+                            assess_years = assess.years, 
+                            assess_interval = assess.interval, 
+                            base_years = base.years,
+                            year.use = 10, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
+                            seed = 123,
+                            save.sdrep = FALSE)
 
 # -----------------------------------------------------------------------------
 # ------------------ Correct assessment model with move fixed -----------------
@@ -210,31 +226,33 @@ mods[[3]] = loop_through_fn2(om = data,
 n_stocks = n_regions = 2
 n_fleets = n_indices = 2
 
-sel <- list(model=rep("logistic",n_fleets+n_indices),
-            initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)),
-            fix_pars=rep(list(NULL),n_fleets+n_indices))
+sel_em <- list(model=rep("logistic",n_fleets+n_indices),
+               initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)),
+               fix_pars=rep(list(NULL),n_fleets+n_indices))
 
-sigma      <- "rec+1"
-re_cor     <- "iid"
-ini.opt    <- "equilibrium"
-NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
-               sigma=rep(sigma,n_stocks),
-               cor=rep(re_cor,n_stocks))
+NAA_re_em <- list(N1_model=rep("equilibrium",n_stocks),
+                  sigma=rep("rec+1",n_stocks),
+                  cor=rep("iid",n_stocks))
 
-M <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
+M_em <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
 
-mods[[4]] = loop_through_fn2(om = data, 
-                             M_em = M, 
-                             sel_em = sel, 
-                             NAA_re_em = NAA_re, 
-                             move_em = move,
-                             em.opt = list(separate.em = FALSE, separate.em.type = 3, do.move = TRUE, est.move = FALSE),
-                             assess_years = assess.years, 
-                             assess_interval = assess.interval, 
-                             base_years = base.years,
-                             year.use = 10, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
-                             seed = 123,
-                             save.sdrep = TRUE)
+mods[[4]] = loop_through_fn(om = data, 
+                            M_om = M,
+                            sel_om = sel, 
+                            NAA_re_om = NAA_re, 
+                            mean_rec_weights = c(2/3,1/3),
+                            move_om = move,
+                            M_em = M_em, 
+                            sel_em = sel_em, 
+                            NAA_re_em = NAA_re_em, 
+                            move_em = move,
+                            em.opt = list(separate.em = FALSE, separate.em.type = 3, do.move = TRUE, est.move = FALSE),
+                            assess_years = assess.years, 
+                            assess_interval = assess.interval, 
+                            base_years = base.years,
+                            year.use = 10, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
+                            seed = 123,
+                            save.sdrep = FALSE)
 
 # -----------------------------------------------------------------------------
 # ----------------- Assessment model with no move but Rec+1 RE ----------------
@@ -244,65 +262,69 @@ mods[[4]] = loop_through_fn2(om = data,
 n_stocks = n_regions = 2
 n_fleets = n_indices = 2
 
-sel <- list(model=rep("logistic",n_fleets+n_indices),
-            initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)),
-            fix_pars=rep(list(NULL),n_fleets+n_indices))
+sel_em <- list(model=rep("logistic",n_fleets+n_indices),
+               initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)),
+               fix_pars=rep(list(NULL),n_fleets+n_indices))
 
-sigma      <- "rec+1"
-re_cor     <- "iid"
-ini.opt    <- "equilibrium"
-NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
-               sigma=rep(sigma,n_stocks),
-               cor=rep(re_cor,n_stocks))
+NAA_re_em <- list(N1_model=rep("equilibrium",n_stocks),
+                  sigma=rep("rec+1",n_stocks),
+                  cor=rep("iid",n_stocks))
 
-M <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
+M_em <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
 
-mods[[5]] = loop_through_fn2(om = data, 
-                             M_em = M, 
-                             sel_em = sel, 
-                             NAA_re_em = NAA_re, 
-                             move_em = move,
-                             em.opt = list(separate.em = FALSE, separate.em.type = 3, do.move = FALSE, est.move = FALSE),
-                             assess_years = assess.years, 
-                             assess_interval = assess.interval, 
-                             base_years = base.years,
-                             year.use = 10, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
-                             seed = 123,
-                             save.sdrep = TRUE)
+mods[[5]] = loop_through_fn(om = data, 
+                            M_om = M,
+                            sel_om = sel, 
+                            NAA_re_om = NAA_re, 
+                            mean_rec_weights = c(2/3,1/3),
+                            move_om = move,
+                            M_em = M_em, 
+                            sel_em = sel_em, 
+                            NAA_re_em = NAA_re_em, 
+                            move_em = NULL,
+                            em.opt = list(separate.em = FALSE, separate.em.type = 3, do.move = FALSE, est.move = FALSE),
+                            assess_years = assess.years, 
+                            assess_interval = assess.interval, 
+                            base_years = base.years,
+                            year.use = 10, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
+                            seed = 123,
+                            save.sdrep = FALSE)
 
 # -----------------------------------------------------------------------------
-# -------------- Assessment model with no move but Rec  RE --------------------
+# -------------- Assessment model with no move but Rec RE ---------------------
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 
 n_stocks = n_regions = 2
 n_fleets = n_indices = 2
 
-sel <- list(model=rep("logistic",n_fleets+n_indices),
-            initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)),
-            fix_pars=rep(list(NULL),n_fleets+n_indices))
+sel_em <- list(model=rep("logistic",n_fleets+n_indices),
+               initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)),
+               fix_pars=rep(list(NULL),n_fleets+n_indices))
 
-sigma      <- "rec"
-re_cor     <- "iid"
-ini.opt    <- "equilibrium"
-NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
-               sigma=rep(sigma,n_stocks),
-               cor=rep(re_cor,n_stocks))
+NAA_re_em <- list(N1_model=rep("equilibrium",n_stocks),
+                  sigma=rep("rec+1",n_stocks),
+                  cor=rep("iid",n_stocks))
 
-M <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
+M_em <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
 
-mods[[6]] = loop_through_fn2(om = data, 
-                             M_em = M, 
-                             sel_em = sel, 
-                             NAA_re_em = NAA_re, 
-                             move_em = move,
-                             em.opt = list(separate.em = FALSE, separate.em.type = 3, do.move = FALSE, est.move = FALSE),
-                             assess_years = assess.years, 
-                             assess_interval = assess.interval, 
-                             base_years = base.years,
-                             year.use = 10, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
-                             seed = 123,
-                             save.sdrep = TRUE)
+mods[[6]] = loop_through_fn(om = data, 
+                            M_om = M,
+                            sel_om = sel, 
+                            NAA_re_om = NAA_re, 
+                            mean_rec_weights = c(2/3,1/3),
+                            move_om = move,
+                            M_em = M_em, 
+                            sel_em = sel_em, 
+                            NAA_re_em = NAA_re_em, 
+                            move_em = NULL,
+                            em.opt = list(separate.em = FALSE, separate.em.type = 3, do.move = FALSE, est.move = FALSE),
+                            assess_years = assess.years, 
+                            assess_interval = assess.interval, 
+                            base_years = base.years,
+                            year.use = 10, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
+                            seed = 123,
+                            save.sdrep = FALSE)
 
 # -----------------------------------------------------------------------------
 # -------------------------------- Plot MSE output ----------------------------

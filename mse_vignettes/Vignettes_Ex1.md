@@ -48,7 +48,9 @@ library(wham)
 ### 1. Load package and create a folder
 ```r
 library(wham)
-main.dir = here::here() 
+# main.dir = here::here()
+main.dir = "where/you/save/your/wham/package"
+
 folder.name = "Example_1"
 sub.dir <- folder.name
 if (file.exists(sub.dir)){

@@ -47,8 +47,12 @@ library(wham)
 
 ### 1. Create a folder to save your results
 ```r
-main.dir = here::here()
-# install.packages(file.path(main.dir,"wham"), repos = NULL, type = "source")
+# main.dir = here::here()
+main.dir = "where/you/save/your/wham/package"
+
+# install.packages(file.path(main.dir,"wham"), dependencies = TRUE, repos = NULL, type = "source")
+# devtools::install_local(file.path(main.dir,"wham"), dependencies = TRUE)
+
 library(wham)
 folder.name = "Example_2"
 sub.dir <- folder.name
