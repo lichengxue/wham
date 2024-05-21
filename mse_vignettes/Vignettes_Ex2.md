@@ -410,4 +410,7 @@ plot_mse_output(m, main.dir = main.dir) # plots should now be saved in main.dir
 #### Fig.3 Model performance in a radar chart
 ![Fig.3](https://github.com/lichengxue/wham/assets/43245366/001531ab-4f39-481c-b893-3274592b60f3)
 
+Performance of different assessment models from a single realization
+![Fig.4](https://github.com/lichengxue/wham/blob/mse/mse_vignettes/Report/Performance_Metrics_one_realization.PNG)
+
 #### More Figures are produced by the plot_mse_output() function, check ?plot_mse_output() for more details.
