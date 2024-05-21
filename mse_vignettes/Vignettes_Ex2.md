@@ -57,8 +57,10 @@ library(wham)
 folder.name = "Example_2"
 sub.dir <- folder.name
 if (file.exists(sub.dir)){
+  setwd(file.path(main.dir,sub.dir))
 } else {
   dir.create(file.path(main.dir,sub.dir))
+  setwd(file.path(main.dir,sub.dir))
 }
 ````
 ### 2. Generate basic information 
@@ -147,7 +149,7 @@ input$data$do_SPR_BRPs     = 1
 ### 8. Generate the operating model
 ```r
 om = fit_wham(input, do.fit = F, do.brps = T, MakeADFun.silent = TRUE)
-saveRDS(om,file.path(sub.dir,"om.RDS")) # save the OM 
+saveRDS(om,"om.RDS") # save the OM 
 ````
 ### 9. Generate datasets
 ```r

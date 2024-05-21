@@ -18,9 +18,10 @@ library(wham)
 folder.name = "Example_2"
 sub.dir <- folder.name
 if (file.exists(sub.dir)){
-  
+  setwd(file.path(main.dir,sub.dir))
 } else {
   dir.create(file.path(main.dir,sub.dir))
+  setwd(file.path(main.dir,sub.dir))
 }
 
 # -----------------------------------------------------------------------------
@@ -102,7 +103,7 @@ input$data$do_SPR_BRPs     = 1
 
 om = fit_wham(input, do.fit = F, do.brps = T, MakeADFun.silent = TRUE)
 
-saveRDS(om,file.path(sub.dir,"om.RDS"))
+saveRDS(om,"om.RDS")
 
 # Generate datasets
 data <- generate_data(om, seed = 123)
