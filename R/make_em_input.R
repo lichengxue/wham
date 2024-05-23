@@ -19,9 +19,25 @@
 #'     }
 #' @param em_years Years used in the assessment model
 #' @param year.use Number of years used in the assessment model
-#' 
+#' @param age_comp_em Likelihood distribution of age composition data in the assessment model
+#'   \itemize{
+#'     \item \code{"multinomial"} Default
+#'     \item \code{"dir-mult"}
+#'     \item \code{"dirichlet-miss0"}
+#'     \item \code{"dirichlet-pool0"}
+#'     \item \code{"dir-mult"}
+#'     \item \code{"logistic-normal-miss0"}    
+#'     \item \code{"logistic-normal-ar1-miss0"}
+#'     \item \code{"logistic-normal-pool0"}
+#'     \item \code{"logistic-normal-01-infl"}
+#'     \item \code{"logistic-normal-pool0"}
+#'     \item \code{"logistic-normal-01-infl-2par"}
+#'     \item \code{"mvtweedie"}
+#'     \item \code{"dir-mult-linear"}
+#'     }
+#'     
 #' @return a wham input 
-#'   
+#' 
 #' @export
 #'
 #' @seealso \code{\link{loop_through_fn}}
@@ -34,7 +50,8 @@ make_em_input = function(om,
                          move_em = NULL,
                          em.opt = em.opt,
                          em_years = NULL,
-                         year.use = NULL) {
+                         year.use = NULL,
+                         age_comp_em = "multinomial") {
   
   if (em.opt$separate.em) em.opt$do.move = FALSE 
   if (!em.opt$separate.em & !em.opt$do.move) move.type = 3 # no movement
@@ -44,6 +61,7 @@ make_em_input = function(om,
   data = om$input$data
   
   if (!is.null(year.use)) {
+    
     if (year.use > length(em_years)) {
       warnings("year.use must be > em_years!\nyear.use is set to equal to em_years")
       year.use = length(em_years)
@@ -58,6 +76,7 @@ make_em_input = function(om,
   }
   
   if (em.opt$separate.em){
+    
     if (em.opt$separate.em.type == 1) {
       n_stocks = data$n_stocks
       em_input = list()
@@ -73,11 +92,17 @@ make_em_input = function(om,
         info$index_info$agg_indices = data$agg_indices[ind_em,s,drop = F]
         info$catch_info$catch_paa = data$catch_paa[s,ind_em,,drop = F]
         info$index_info$index_paa = data$index_paa[s,ind_em,,drop = F]
-        em_input[[s]] = prepare_wham_input(basic_info = info, selectivity = sel_em, M = M_em, NAA_re = NAA_re_em)
+        
+        em_input[[s]] = prepare_wham_input(basic_info = info, 
+                                           selectivity = sel_em, 
+                                           M = M_em, 
+                                           NAA_re = NAA_re_em, 
+                                           age_comp = age_comp_em)
       } 
     }
     
     if (em.opt$separate.em.type == 2) { # use areas-as-fleets model 
+      
       n_fleets = data$n_fleets
       n_indices = data$n_indices
       
@@ -93,7 +118,7 @@ make_em_input = function(om,
       info$catch_info$catch_paa = data$catch_paa[,ind_em,,drop = F]
       info$index_info$index_paa = data$index_paa[,ind_em,,drop = F]
       
-      em_input = prepare_wham_input(basic_info = info, selectivity = sel_em, M = M_em, NAA_re = NAA_re_em)
+      em_input = prepare_wham_input(basic_info = info, selectivity = sel_em, M = M_em, NAA_re = NAA_re_em, age_comp = age_comp_em)
     }
     
     if (em.opt$separate.em.type == 3) { # use one area with fleets and survey indices combined
@@ -132,10 +157,15 @@ make_em_input = function(om,
       result <- t(apply(result,1,function(row)row/sum(row)))
       info$index_info$index_paa <- array(result,dim = c(1, nrow(result), ncol(result)))
       
-      em_input = prepare_wham_input(basic_info = info, selectivity = sel_em, M = M_em, NAA_re = NAA_re_em)
+      em_input = prepare_wham_input(basic_info = info, 
+                                    selectivity = sel_em, 
+                                    M = M_em, 
+                                    NAA_re = NAA_re_em, 
+                                    age_comp = age_comp_em)
     }
     
   } else {
+    
     info = generate_basic_info(base.years = em_years)
     info = generate_NAA_where(basic_info = info, move.type = move.type)
     #fill in the data from the operating model simulation
@@ -146,13 +176,23 @@ make_em_input = function(om,
     
     if (em.opt$do.move) {
       
-      em_input = prepare_wham_input(basic_info = info, selectivity = sel_em, M = M_em, NAA_re = NAA_re_em, move = move_em)
+      em_input = prepare_wham_input(basic_info = info, 
+                                    selectivity = sel_em, 
+                                    M = M_em, 
+                                    NAA_re = NAA_re_em, 
+                                    move = move_em, 
+                                    age_comp = age_comp_em)
       
       if (!em.opt$est.move) em_input = fix_move(em_input)
       
     } else {
       
-      em_input = prepare_wham_input(basic_info = info, selectivity = sel_em, M = M_em, NAA_re = NAA_re_em, move = NULL)
+      em_input = prepare_wham_input(basic_info = info, 
+                                    selectivity = sel_em, 
+                                    M = M_em, 
+                                    NAA_re = NAA_re_em, 
+                                    move = NULL, 
+                                    age_comp = age_comp_em)
     }
   }
   

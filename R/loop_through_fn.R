@@ -4,11 +4,27 @@
 #' and refit the estimation model and generate the catch advice.
 #' 
 #' @param om Operating model including pseudo data
-#' @param M_om Natural mortality configuration in the OM
-#' @param sel_om Selectivity configuration in the OM
-#' @param NAA_re_om Numbers-at-age (NAA) configuration in the OM
+#' @param M_om Natural mortality configuration in the operating model
+#' @param sel_om Selectivity configuration in the operating model
+#' @param NAA_re_om Numbers-at-age (NAA) configuration in the operating model
 #' @param mean_rec_weights A vector of weights given to each stock (default = NULL) 
-#' @param move_om Movement configuration in the OM
+#' @param move_om Movement configuration in the operating model
+#' @param age_comp_om Likelihood distribution of age composition data in the operating model
+#'   \itemize{
+#'     \item \code{"multinomial"} Default
+#'     \item \code{"dir-mult"}
+#'     \item \code{"dirichlet-miss0"}
+#'     \item \code{"dirichlet-pool0"}
+#'     \item \code{"dir-mult"}
+#'     \item \code{"logistic-normal-miss0"}    
+#'     \item \code{"logistic-normal-ar1-miss0"}
+#'     \item \code{"logistic-normal-pool0"}
+#'     \item \code{"logistic-normal-01-infl"}
+#'     \item \code{"logistic-normal-pool0"}
+#'     \item \code{"logistic-normal-01-infl-2par"}
+#'     \item \code{"mvtweedie"}
+#'     \item \code{"dir-mult-linear"}
+#'     }
 #' @param M_em Natural mortality configuration in the assessment model
 #' @param sel_em Selectivity configuration in the assessment model
 #' @param NAA_re_em Numbers-at-age (NAA) configuration in the assessment model
@@ -22,6 +38,22 @@
 #'     {=3} panmictic (use spatially-aggregated data and projected total catch will be allocated based on stock-specific recruitment) \cr
 #'     \item \code{$do.move} T/F movement is included (use when separate.em = FALSE)
 #'     \item \code{$est.move} T/F movement rate is estimated (use when separate.em = FALSE)
+#'     }
+#' @param age_comp_em Likelihood distribution of age composition data in the assessment model
+#'   \itemize{
+#'     \item \code{"multinomial"} Default
+#'     \item \code{"dir-mult"}
+#'     \item \code{"dirichlet-miss0"}
+#'     \item \code{"dirichlet-pool0"}
+#'     \item \code{"dir-mult"}
+#'     \item \code{"logistic-normal-miss0"}    
+#'     \item \code{"logistic-normal-ar1-miss0"}
+#'     \item \code{"logistic-normal-pool0"}
+#'     \item \code{"logistic-normal-01-infl"}
+#'     \item \code{"logistic-normal-pool0"}
+#'     \item \code{"logistic-normal-01-infl-2par"}
+#'     \item \code{"mvtweedie"}
+#'     \item \code{"dir-mult-linear"}
 #'     }
 #' @param assess_years Year in which the assessment is conducted
 #' @param assess_interval Assessment interval used in the MSE feedback loop
@@ -51,11 +83,13 @@ loop_through_fn = function(om,
                            NAA_re_om, 
                            mean_rec_weights = NULL,
                            move_om,
+                           age_comp_om = "multinomial",
                            M_em, 
                            sel_em, 
                            NAA_re_em,
                            move_em = NULL,
                            em.opt = NULL,
+                           age_comp_em = "multinomial",
                            assess_years = NULL, 
                            assess_interval = NULL, 
                            base_years = NULL, 
@@ -111,7 +145,8 @@ loop_through_fn = function(om,
                                  move_em,
                                  em.opt = em.opt,
                                  em_years = em.years,
-                                 year.use = year.use)
+                                 year.use = year.use,
+                                 age_comp = age_comp_em)
         
         n_stocks = om$input$data$n_stocks
         advice = NULL
@@ -134,6 +169,13 @@ loop_through_fn = function(om,
           advice = cbind(advice,tmp)
         }
         
+        if(is.matrix(advice)) {
+          advice = rowSums(advice) 
+          if(length(advice) != assess_interval) warning("Length of projection year must be equal to length of catch advice!")
+        } else {
+          advice = advice
+        }
+        
         # set the catch for the next assess_interval years
         interval.info = list(catch = advice, years = y + 1:assess_interval)
         
@@ -152,7 +194,8 @@ loop_through_fn = function(om,
                                       selectivity = sel_om, 
                                       M = M_om, 
                                       NAA_re = NAA_re_om, 
-                                      move = move_om)
+                                      move = move_om,
+                                      age_comp = age_comp_om)
         
         if(!is.null(mean_rec_weights)){
           om_input$data$SPR_weight_type = om_input$data$do_SPR_BRPs = 1
@@ -188,7 +231,8 @@ loop_through_fn = function(om,
                                  move_em,
                                  em.opt = em.opt,
                                  em_years = em.years,
-                                 year.use = year.use)
+                                 year.use = year.use,
+                                 age_comp = age_comp_em)
         
         # fit the estimation model
         em = fit_wham(em_input, do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE) #no feedback period yet
@@ -201,6 +245,13 @@ loop_through_fn = function(om,
         
         # make the catch advice
         advice = advice_fn(em, pro.yr = assess_interval)
+        
+        if(is.matrix(advice)) {
+          advice = rowSums(advice) 
+          if(length(advice) != assess_interval) warning("Length of projection year must be equal to length of catch advice!")
+        } else {
+          advice = advice
+        }
         
         # set the catch for the next assess_interval years
         interval.info = list(catch = advice, years = y + 1:assess_interval)
@@ -218,7 +269,8 @@ loop_through_fn = function(om,
                                       selectivity = sel_om, 
                                       M = M_om, 
                                       NAA_re = NAA_re_om, 
-                                      move = move_om)
+                                      move = move_om,
+                                      age_comp = age_comp_om)
         
         if(!is.null(mean_rec_weights)){
           om_input$data$SPR_weight_type = om_input$data$do_SPR_BRPs = 1
@@ -254,7 +306,8 @@ loop_through_fn = function(om,
                                  move_em,
                                  em.opt = em.opt,
                                  em_years = em.years,
-                                 year.use = year.use)
+                                 year.use = year.use,
+                                 age_comp = age_comp_em)
         
         n_stocks = om$input$data$n_stocks
 
@@ -269,7 +322,14 @@ loop_through_fn = function(om,
         # make the catch advice
         advice = advice_fn(em, pro.yr = assess_interval)
         
-        advice <- matrix(c(advice*(2/3),advice*(1/3)), ncol = 2, byrow = TRUE)
+        if(is.matrix(advice)) {
+          advice = rowSums(advice) 
+          if(length(advice) != assess_interval) warning("Length of projection year must be equal to length of catch advice!")
+        } else {
+          advice = advice
+        }
+
+        # advice <- matrix(c(advice*(2/3),advice*(1/3)), ncol = 2, byrow = TRUE)
         
         # set the catch for the next assess_interval years
         interval.info = list(catch = advice, years = y + 1:assess_interval)
@@ -287,7 +347,8 @@ loop_through_fn = function(om,
                                       selectivity = sel_om, 
                                       M = M_om, 
                                       NAA_re = NAA_re_om, 
-                                      move = move_om)
+                                      move = move_om,
+                                      age_comp = age_comp_om)
         
         if(!is.null(mean_rec_weights)){
           om_input$data$SPR_weight_type = om_input$data$do_SPR_BRPs = 1
@@ -328,7 +389,8 @@ loop_through_fn = function(om,
                                    move_em,
                                    em.opt = em.opt,
                                    em_years = em.years,
-                                   year.use = year.use)
+                                   year.use = year.use,
+                                   age_comp = age_comp_em)
           
           # fit the estimation model
           em = fit_wham(em_input, do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE) #no feedback period yet
@@ -341,6 +403,13 @@ loop_through_fn = function(om,
           
           # make the catch advice
           advice = advice_fn(em, pro.yr = assess_interval)
+          
+          if(is.matrix(advice)) {
+            advice = rowSums(advice) 
+            if(length(advice) != assess_interval) warning("Length of projection year must be equal to length of catch advice!")
+          } else {
+            advice = advice
+          }
           
           # set the catch for the next assess_interval years
           interval.info = list(catch = advice, years = y + 1:assess_interval)
@@ -358,7 +427,8 @@ loop_through_fn = function(om,
                                         selectivity = sel_om, 
                                         M = M_om, 
                                         NAA_re = NAA_re_om, 
-                                        move = move_om)
+                                        move = move_om,
+                                        age_comp = age_comp_om)
           
           if(!is.null(mean_rec_weights)){
             om_input$data$SPR_weight_type = om_input$data$do_SPR_BRPs = 1
@@ -393,7 +463,8 @@ loop_through_fn = function(om,
                                    move_em, 
                                    em.opt = em.opt,
                                    em_years = em.years,
-                                   year.use = year.use)
+                                   year.use = year.use,
+                                   age_comp = age_comp_em)
           
           # Fix the movement (don't estimate movement)
           sigma_vals = 0.2
@@ -412,6 +483,13 @@ loop_through_fn = function(om,
           # make the catch advice
           advice = advice_fn(em, pro.yr = assess_interval)
           
+          if(is.matrix(advice)) {
+            advice = rowSums(advice) 
+            if(length(advice) != assess_interval) warning("Length of projection year must be equal to length of catch advice!")
+          } else {
+            advice = advice
+          }
+          
           # set the catch for the next assess_interval years
           interval.info = list(catch = advice, years = y + 1:assess_interval)
           
@@ -428,7 +506,8 @@ loop_through_fn = function(om,
                                         selectivity = sel_om, 
                                         M = M_om, 
                                         NAA_re = NAA_re_om, 
-                                        move = move_om)
+                                        move = move_om,
+                                        age_comp = age_comp_om)
           
           if(!is.null(mean_rec_weights)){
             om_input$data$SPR_weight_type = om_input$data$do_SPR_BRPs = 1
@@ -464,7 +543,8 @@ loop_through_fn = function(om,
                                  move_em = NULL, 
                                  em.opt = em.opt,
                                  em_years = em.years,
-                                 year.use = year.use)
+                                 year.use = year.use,
+                                 age_comp = age_comp_em)
         
         # fit the estimation model
         em = fit_wham(em_input, do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE) #no feedback period yet
@@ -477,6 +557,13 @@ loop_through_fn = function(om,
         
         # make the catch advice
         advice = advice_fn(em, pro.yr = assess_interval)
+        
+        if(is.matrix(advice)) {
+          advice = rowSums(advice) 
+          if(length(advice) != assess_interval) warning("Length of projection year must be equal to length of catch advice!")
+        } else {
+          advice = advice
+        }
         
         # set the catch for the next assess_interval years
         interval.info = list(catch = advice, years = y + 1:assess_interval)
@@ -494,7 +581,8 @@ loop_through_fn = function(om,
                                       selectivity = sel_om, 
                                       M = M_om, 
                                       NAA_re = NAA_re_om, 
-                                      move = move_om)
+                                      move = move_om,
+                                      age_comp = age_comp_om)
         
         if(!is.null(mean_rec_weights)){
           om_input$data$SPR_weight_type = om_input$data$do_SPR_BRPs = 1

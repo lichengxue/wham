@@ -12,7 +12,8 @@ make_em_input(
   move_em = NULL,
   em.opt = em.opt,
   em_years = NULL,
-  year.use = NULL
+  year.use = NULL,
+  age_comp_em = "multinomial"
 )
 }
 \arguments{
@@ -40,6 +41,23 @@ make_em_input(
 \item{em_years}{Years used in the assessment model}
 
 \item{year.use}{Number of years used in the assessment model}
+
+\item{age_comp_em}{Likelihood distribution of age composition data in the assessment model
+\itemize{
+  \item \code{$multinomial}
+  \item \code{$dir-mult}
+  \item \code{$dirichlet-miss0}
+  \item \code{$dirichlet-pool0}
+  \item \code{$dir-mult}
+  \item \code{$logistic-normal-miss0}    
+  \item \code{$logistic-normal-ar1-miss0}
+  \item \code{$logistic-normal-pool0}
+  \item \code{$logistic-normal-01-infl}
+  \item \code{$logistic-normal-pool0}
+  \item \code{$logistic-normal-01-infl-2par}
+  \item \code{$mvtweedie}
+  \item \code{$"dir-mult-linear"}
+  }}
 }
 \value{
 a wham input
