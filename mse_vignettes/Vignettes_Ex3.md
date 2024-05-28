@@ -2,8 +2,8 @@
 
 ### 1. Create a folder to save your results
 ```r
-# main.dir = here::here()
-main.dir = "where/you/save/your/wham/package"
+main.dir = here::here()
+# main.dir = "where/you/save/your/wham/package"
 
 # install.packages(file.path(main.dir,"wham"), dependencies = TRUE, repos = NULL, type = "source")
 # devtools::install_local(file.path(main.dir,"wham"), dependencies = TRUE)
@@ -117,7 +117,7 @@ NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
 # If sigma="rec+1": a list (length = n_stocks) of 2 values must be specified. First is for the first age class (recruits), second is for all other ages.
 
 ````
-### 6. Generate wham input and operating model
+### 6. Generate wham input
 ```r
 input <- prepare_wham_input(basic_info = basic_info, 
                             selectivity = sel, 
@@ -125,13 +125,24 @@ input <- prepare_wham_input(basic_info = basic_info,
                             NAA_re = NAA_re, 
                             move = move,
                             age_comp = "logistic-normal-miss0")
+````
 
-om <- fit_wham(input, do.fit = F, do.brps = T, MakeADFun.silent = TRUE)
+### 7. Assign weights based on mean recruitment to calculate global SPR-based reference points
+The SPR-based biological reference point in multi-wham is a weighted average based on the mean recruitment of each stock. The default is SPR(stock1) and SPR(stock2) are equally weighted. But users should change SPR weights if the mean recruitment for each stock is different. This step is only needed when generating the operating model. In the feedback loop, the weights will be automatically calculated given the mean recruitment estimated from the assessment model.
+```r
+# Global SPR is calculated based on weights of mean rec par 
+input$data$SPR_weight_type <- 1
+input$data$SPR_weights     <- c(2/3,1/3)
+input$data$do_SPR_BRPs     <- 1
+````
 
+### 8. Generate the operating model
+```r
+om = fit_wham(input, do.fit = F, do.brps = T, MakeADFun.silent = TRUE) 
 saveRDS(om,"om.RDS") # save the OM 
 ````
 
-### 7. Self test
+### 9. Self test
 ```r
 sim_fn <- function(om, self.fit = FALSE){
   input <- om$input
@@ -145,11 +156,11 @@ set.seed(12345)
 self_sim_fit <- sim_fn(om, self.fit = TRUE)
 ````
 
-### 8. Generate datasets
+### 10. Generate datasets
 ```r
 data <- generate_data(om, seed = 123)
 ````
-### 9. Specify assessment interval and assessment year in the feedback loop
+### 11. Specify assessment interval and assessment year in the feedback loop
 Users can specify the assessment interval for the feedback period. For medium-lived groundfish stock, an assessment interval of 3 years is typically common in the northeast region. It should be noted that the shorter assessment interval, the longer runtime it may take for the whole feedback period.
 ```r
 assess.interval <- 3 # Assessment interval
@@ -158,7 +169,7 @@ first.year      <- head(base.years,1)
 terminal.year   <- tail(base.years,1)
 assess.years    <- seq(terminal.year, tail(om$years,1)-assess.interval,by = assess.interval)
 ````
-### 10. EM: Separate panmictic assessment models with NAA random effects
+### 12. EM: Separate panmictic assessment models with NAA random effects
 Fit separate assessment models for each stock like traditional single-stock assessment
 ![EM1](https://github.com/lichengxue/wham/blob/mse/mse_vignettes/Vignettes_figs/EM1.png)
 ```r

@@ -117,6 +117,11 @@ NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
 # Generate wham input 
 input <- prepare_wham_input(basic_info = basic_info, selectivity = sel, M = M, NAA_re = NAA_re, move = move)
 
+# Global SPR is calculated based on weights of mean rec par 
+input$data$SPR_weight_type <- 1
+input$data$SPR_weights     <- c(2/3,1/3)
+input$data$do_SPR_BRPs     <- 1
+
 om = fit_wham(input, do.fit = F, do.brps = T, MakeADFun.silent = TRUE)
 
 saveRDS(om,"om.RDS")

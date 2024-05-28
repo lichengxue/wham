@@ -47,8 +47,8 @@ library(wham)
 
 ### 1. Create a folder to save your results
 ```r
-# main.dir = here::here()
-main.dir = "where/you/save/your/wham/package"
+main.dir = here::here()
+# main.dir = "where/you/save/your/wham/package"
 
 # install.packages(file.path(main.dir,"wham"), dependencies = TRUE, repos = NULL, type = "source")
 # devtools::install_local(file.path(main.dir,"wham"), dependencies = TRUE)
@@ -174,6 +174,7 @@ input$data$do_SPR_BRPs     <- 1
 ### 7. Generate the operating model
 ```r
 om = fit_wham(input, do.fit = F, do.brps = T, MakeADFun.silent = TRUE)
+print(exp(om$rep$log_FXSPR_static)) # This is static F40%, now you may replace F_info$F.year1 with this value in the above generate_basic_info function if you want historic fishing mortality to be at F40% 
 saveRDS(om,"om.RDS") # save the OM 
 ````
 ### 8. Generate datasets

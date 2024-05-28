@@ -115,9 +115,22 @@ NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
 # If sigma="rec+1": a list (length = n_stocks) of 2 values must be specified. First is for the first age class (recruits), second is for all other ages.
 
 ````
-### 6. Generate wham input and operating model
+### 6. Generate wham input
 ```r
 input <- prepare_wham_input(basic_info = basic_info, selectivity = sel, M = M, NAA_re = NAA_re, move = move)
+````
+
+### 7. Assign weights based on mean recruitment to calculate global SPR-based reference points
+The SPR-based biological reference point in multi-wham is a weighted average based on the mean recruitment of each stock. The default is SPR(stock1) and SPR(stock2) are equally weighted. But users should change SPR weights if the mean recruitment for each stock is different. This step is only needed when generating the operating model. In the feedback loop, the weights will be automatically calculated given the mean recruitment estimated from the assessment model.
+```r
+# Global SPR is calculated based on weights of mean rec par 
+input$data$SPR_weight_type <- 1
+input$data$SPR_weights     <- c(2/3,1/3)
+input$data$do_SPR_BRPs     <- 1
+````
+
+### 8. Generate the operating model
+```r
 om = fit_wham(input, do.fit = F, do.brps = T, MakeADFun.silent = TRUE)
 saveRDS(om,"om.RDS") # save the OM 
 ````
