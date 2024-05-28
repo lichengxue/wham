@@ -22,6 +22,8 @@ loop_through_fn(
   assess_interval = NULL,
   base_years = NULL,
   year.use = 30,
+  hcr.type = 1,
+  hcr.opts = NULL,
   do.retro = FALSE,
   do.osa = FALSE,
   seed = 123,
@@ -37,7 +39,7 @@ loop_through_fn(
 
 \item{NAA_re_om}{Numbers-at-age (NAA) configuration in the operating model}
 
-\item{mean_rec_weights}{A vector of weights given to each stock (default = NULL)}
+\item{mean_rec_weights}{A vector of weights given to each stock (default = NULL).}
 
 \item{move_om}{Movement configuration in the operating model}
 
@@ -101,6 +103,21 @@ loop_through_fn(
 \item{base_years}{Years used in the burn-in period}
 
 \item{year.use}{Number of years used in the assessment model}
+
+\item{hcr.type}{Type of harvest control rule
+\itemize{
+  \item \code{"1"} Annual projected catch based on 75% of F40% (default)
+  \item \code{"2"} Constant catch based on 75% of F40%
+  \item \code{"3"} "Hockey stick" catch based on stock status
+  }}
+
+\item{hcr.opts}{a list of HCR information, only used if hcr.type = 3
+\itemize{
+  \item \code{"max_percent"} maximum percent of F_XSPR to use for calculating catch in projections (default = 75)
+  \item \code{"min_percent"} minimum percent of F_XSPR to use for calculating catch in projections (default = 0.01)
+  \item \code{"BThresh_up"} Upper bound of overfished level (default = 0.5) 
+  \item \code{"BThresh_low"} Lower bound of overfished level (default = 0.1)
+  }}
 
 \item{do.retro}{T/F do retrospective analysis? Default = TRUE.}
 

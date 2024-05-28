@@ -15,7 +15,7 @@ update_om_fn(om, om2, interval.info, seed = 123)
 \itemize{
   \item \code{"$years"} projection years 
   \item \code{"$catch"} matrix (n_region x n_years) projected catch 
-  \item \code{"=NULL"} generate data in the OM
+  \item \code{"=NULL"} generate data in the operating model
   }}
 
 \item{seed}{Seed used to generate data}

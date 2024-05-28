@@ -8,7 +8,7 @@
 #'   \itemize{
 #'     \item \code{"$years"} projection years 
 #'     \item \code{"$catch"} matrix (n_region x n_years) projected catch 
-#'     \item \code{"=NULL"} generate data in the OM
+#'     \item \code{"=NULL"} generate data in the operating model
 #'     }
 #' @param seed Seed used to generate data
 #' 

@@ -125,8 +125,8 @@ M <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n
 sigma        <- "rec+1"
 re_cor       <- "iid"
 ini.opt      <- "equilibrium" # option   <- c("age-specific-fe", "equilibrium")
-Rec_sig      <- 0.1 # (sigma for recruitment)
-NAA_sig      <- 0.1 # (sigma for NAA)
+Rec_sig      <- 0.2 # (sigma for recruitment)
+NAA_sig      <- 0.2 # (sigma for NAA)
 
 # Set initial NAA for each stock
 log_N1 = rep(10,n_stocks)
@@ -162,13 +162,8 @@ NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
 ```r
 input <- prepare_wham_input(basic_info = basic_info, selectivity = sel, M = M, NAA_re = NAA_re, move = move)
 ```
-### 6. Change mean recruitment para. and variance of NAA random effects
-```r
-input$par$mean_rec_pars[1,1] <- log(exp(10)*2) # Change mean rec for first stock
-input$par$log_N1[1,1,1]      <- log(exp(10)*2) # Change initial N1 for the first stock
-input$par$log_NAA_sigma[]    <- log(0.2) # Change the sigma for NAA (Rec+1) to be log(0.5)
-````
-### 7. Assign weights based on mean recruitment to calculate global SPR-based reference points
+
+### 6. Assign weights based on mean recruitment to calculate global SPR-based reference points
 The SPR-based biological reference point in multi-wham is a weighted average based on the mean recruitment of each stock. The default is SPR(stock1) and SPR(stock2) are equally weighted. But users should change SPR weights if the mean recruitment for each stock is different. This step is only needed when generating the operating model. In the feedback loop, the weights will be automatically calculated given the mean recruitment estimated from the assessment model.
 ```r
 # Global SPR is calculated based on weights of mean rec par 
@@ -176,12 +171,12 @@ input$data$SPR_weight_type <- 1
 input$data$SPR_weights     <- c(2/3,1/3)
 input$data$do_SPR_BRPs     <- 1
 ````
-### 8. Generate the operating model
+### 7. Generate the operating model
 ```r
 om = fit_wham(input, do.fit = F, do.brps = T, MakeADFun.silent = TRUE)
 saveRDS(om,"om.RDS") # save the OM 
 ````
-### 9. Generate datasets
+### 8. Generate datasets
 ```r
 data <- generate_data(om, seed = 123)
 # Generate 100 datasets
@@ -195,7 +190,7 @@ data <- generate_data(om, seed = 123)
 #   return(input_i)
 # })
 ````
-### 10. Specify assessment interval and assessment year in the feedback loop
+### 9. Specify assessment interval and assessment year in the feedback loop
 Users can specify the assessment interval for the feedback period. For medium-lived groundfish stock, an assessment interval of 3 years is typically common in the northeast region. It should be noted that the shorter assessment interval, the longer runtime it may take for the whole feedback period.
 ```r
 assess.interval = 3 # Assessment interval
@@ -208,7 +203,7 @@ Create a list to save the MSE results
 ```r
 mods <- list()
 ````
-## 11. Perform Management Strategy Evaluation
+## 10. Perform Management Strategy Evaluation
 The code below does a closed-loop simulation with operating model, fitting an estimating model, generating catch advice and incorporating it into the operating model.
 
 The table shown below describes the options of assessment model in the mse package

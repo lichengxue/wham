@@ -4,18 +4,26 @@
 \alias{advice_fn}
 \title{Generate catch advice}
 \usage{
-advice_fn(em, pro.yr = assess.interval, type = 1)
+advice_fn(em, pro.yr = assess.interval, hcr.type = 1, hcr.opts = NULL)
 }
 \arguments{
 \item{em}{Estimation model}
 
 \item{pro.yr}{Number of years in projection}
 
-\item{type}{Type of harvest control rule
+\item{hcr.type}{Type of harvest control rule
 \itemize{
   \item \code{"1"} Annual projected catch based on 75% of F40% (default)
   \item \code{"2"} Constant catch based on 75% of F40%
   \item \code{"3"} "Hockey stick" catch based on stock status
+  }}
+
+\item{hcr.opts}{only used if hcr.type = 3
+\itemize{
+  \item \code{"max_percent"} maximum percent of F_XSPR to use for calculating catch in projections (default = 75)
+  \item \code{"min_percent"} minimum percent of F_XSPR to use for calculating catch in projections (default = 0.01)
+  \item \code{"BThresh_up"} Upper bound of overfished level (default = 0.5) 
+  \item \code{"BThresh_low"} Lower bound of overfished level (default = 0.1)
   }}
 }
 \value{

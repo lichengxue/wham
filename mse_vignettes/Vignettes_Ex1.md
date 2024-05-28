@@ -164,20 +164,13 @@ NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
 ```r
 input <- prepare_wham_input(basic_info = basic_info, selectivity = sel, M = M, NAA_re = NAA_re, move = move)
 ````
-### 6. Change mean recruitment para. and variance of NAA random effects (optional)
-Mean recruitment and sigma for all stocks are assumed the same (mean = exp(10) and sigma = exp(0)). Users are allowed to change the mean and sigma for recruitment for each stock as needed. Note that high sigma (e.g. sigma >= 1) may cause the convergence issue in the feedback loop.
-```r
-input$par$mean_rec_pars[1,1] <- log(exp(10)*2) # Change mean rec for first stock
-input$par$log_N1[1,1,1]      <- log(exp(10)*2) # Change initial N1 for the first stock
-input$par$log_NAA_sigma[]    <- log(0.5) # Change the sigma for NAA (Rec+1) to be log(0.5)
-# Note: sigma for recruitment (sigma1) and numbers at older ages (sigma2) are both 0.5 here.
-````
-### 7. Generate the operating model
+
+### 6. Generate the operating model
 ```r
 om = fit_wham(input, do.fit = F, do.brps = F, MakeADFun.silent = TRUE)
 # Note: do.fit must be FALSE (no modeling fitting yet)
 ````
-### 8. Self test 
+### 7. Self test 
 ```r
 # Create a function to generate data and do self fitting
 sim_fn <- function(om, self.fit = FALSE){
@@ -194,11 +187,11 @@ set.seed(12345)
 self_sim_fit <- sim_fn(om, self.fit = TRUE)
 check_convergence(self_sim_fit) # check the model convergence
 ````
-### 9. Create HTML file to view output plots in browser (optional)
+### 8. Create HTML file to view output plots in browser (optional)
 ```r
 plot_wham_output(self_sim_fit, out.type = "html")
 ````
-### 10. Creates a sub directory and saves .png files (optional)
+### 9. Creates a sub directory and saves .png files (optional)
 ```r
 report.dir <- "report"
 if (file.exists(report.dir)){
@@ -207,7 +200,7 @@ if (file.exists(report.dir)){
 }
 plot_wham_output(self_sim_fit, dir.main = file.path(main.dir, sub.dir, report.dir),out.type = 'png')
 ````
-### 11. Cross test
+### 10. Cross test
 Different numbers-at-age configuration is used in the estimation model 
 ```r
 # EM with different NAA configuration
@@ -236,11 +229,11 @@ cross_sim_fit <- sim_fn2(om, em, cross.fit = TRUE)
 # check model convergence
 check_convergence(cross_sim_fit)
 ````
-### 12. Create HTML file to view output plots in browser (optional)
+### 11. Create HTML file to view output plots in browser (optional)
 ```r
 plot_wham_output(cross_sim_fit, out.type = "html")
 ````
-### 13. Generate replicates for self test (optional)
+### 12. Generate replicates for self test (optional)
 Parameters (including random effects parameters) associated with population dynamics are now defined in the operating model. Users can generate pseudo observational data from the operating model with process and observation errors randomly drawn from their corresponding likelihood distribution. Generating 100 pseudo data is common when performing a self test.
 ```r
 nsim = 100 
@@ -288,3 +281,14 @@ SSB = lapply(1:nsim, function(x){
 })
 print(SSB)
 ````
+
+### 13. Generate replicates for cross test (optional)
+nsim = 100
+set.seed(8675309) 
+sim_input = list()
+sim_input = lapply(1:nsim, function(x) {
+  input_i = em$input
+  sim = om$simulate(complete=TRUE)
+  input_i$data = sim
+  return(input_i)
+})

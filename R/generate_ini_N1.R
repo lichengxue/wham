@@ -10,6 +10,8 @@
 #'       }
 #' @return an array of numbers-at-age (n_stocks x n_regions x n_ages)
 #' 
+#' @export
+#' 
 #' @examples
 #' \dontrun{
 #' basic_info <- generate_basic_info()

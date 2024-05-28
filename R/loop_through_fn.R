@@ -7,7 +7,7 @@
 #' @param M_om Natural mortality configuration in the operating model
 #' @param sel_om Selectivity configuration in the operating model
 #' @param NAA_re_om Numbers-at-age (NAA) configuration in the operating model
-#' @param mean_rec_weights A vector of weights given to each stock (default = NULL) 
+#' @param mean_rec_weights A vector of weights given to each stock (default = NULL).
 #' @param move_om Movement configuration in the operating model
 #' @param age_comp_om Likelihood distribution of age composition data in the operating model
 #'   \itemize{
@@ -59,6 +59,19 @@
 #' @param assess_interval Assessment interval used in the MSE feedback loop
 #' @param base_years Years used in the burn-in period
 #' @param year.use Number of years used in the assessment model
+#' @param hcr.type Type of harvest control rule
+#'   \itemize{
+#'     \item \code{"1"} Annual projected catch based on 75% of F40% (default)
+#'     \item \code{"2"} Constant catch based on 75% of F40%
+#'     \item \code{"3"} "Hockey stick" catch based on stock status
+#'     }
+#' @param hcr.opts a list of HCR information, only used if hcr.type = 3
+#'   \itemize{
+#'     \item \code{"max_percent"} maximum percent of F_XSPR to use for calculating catch in projections (default = 75)
+#'     \item \code{"min_percent"} minimum percent of F_XSPR to use for calculating catch in projections (default = 0.01)
+#'     \item \code{"BThresh_up"} Upper bound of overfished level (default = 0.5) 
+#'     \item \code{"BThresh_low"} Lower bound of overfished level (default = 0.1)
+#'     }
 #' @param do.retro 	T/F do retrospective analysis? Default = TRUE.
 #' @param do.osa T/F calculate one-step-ahead (OSA) residuals? Default = TRUE.
 #' @param seed Seed used for generating data
@@ -96,6 +109,8 @@ loop_through_fn = function(om,
                            assess_interval = NULL, 
                            base_years = NULL, 
                            year.use = 30,
+                           hcr.type = 1,
+                           hcr.opts = NULL,
                            do.retro = FALSE,
                            do.osa = FALSE,
                            seed = 123,
@@ -168,7 +183,7 @@ loop_through_fn = function(om,
           if (!conv[s] | !pdHess[s]) warning("Assessment model is not converged!")
           
           mod <- em[[s]]
-          tmp = advice_fn(em = mod, pro.yr = assess_interval)
+          tmp = advice_fn(em = mod, pro.yr = assess_interval, hcr.type = hcr.type, hcr.opts = hcr.opts)
           
           advice = cbind(advice,tmp)
         }
@@ -184,8 +199,8 @@ loop_through_fn = function(om,
         interval.info = list(catch = advice, years = y + 1:assess_interval)
         
         # update the operating model with the right Fs and resimulate the data given those Fs
-        
         info = generate_basic_info(base.years = em.years)
+        
         info = generate_NAA_where(basic_info = info, move.type = move.type)
 
         info$catch_info$agg_catch = om$input$data$agg_catch[1:length(em.years),,drop = F]
@@ -248,7 +263,7 @@ loop_through_fn = function(om,
         if (!conv | !pdHess) warning("Assessment model is not converged!")
         
         # make the catch advice
-        advice = advice_fn(em, pro.yr = assess_interval)
+        advice = advice_fn(em, pro.yr = assess_interval, hcr.type = hcr.type, hcr.opts = hcr.opts)
         
         if(is.matrix(advice)) {
           advice = rowSums(advice) 
@@ -261,6 +276,7 @@ loop_through_fn = function(om,
         interval.info = list(catch = advice, years = y + 1:assess_interval)
         
         info = generate_basic_info(base.years = em.years)
+        
         info = generate_NAA_where(basic_info = info, move.type = move.type)
 
         info$catch_info$agg_catch = om$input$data$agg_catch[1:length(em.years),,drop = F]
@@ -324,7 +340,7 @@ loop_through_fn = function(om,
         if (!conv | !pdHess) warning("Assessment model is not converged!")
         
         # make the catch advice
-        advice = advice_fn(em, pro.yr = assess_interval)
+        advice = advice_fn(em, pro.yr = assess_interval, hcr.type = hcr.type, hcr.opts = hcr.opts)
         
         if(is.matrix(advice)) {
           advice = rowSums(advice) 
@@ -339,6 +355,7 @@ loop_through_fn = function(om,
         interval.info = list(catch = advice, years = y + 1:assess_interval)
         
         info = generate_basic_info(base.years = em.years)
+        
         info = generate_NAA_where(basic_info = info, move.type = move.type)
 
         info$catch_info$agg_catch = om$input$data$agg_catch[1:length(em.years),,drop = F]
@@ -406,7 +423,7 @@ loop_through_fn = function(om,
           if (!conv | !pdHess) warning("Assessment model is not converged!")
           
           # make the catch advice
-          advice = advice_fn(em, pro.yr = assess_interval)
+          advice = advice_fn(em, pro.yr = assess_interval, hcr.type = hcr.type, hcr.opts = hcr.opts)
           
           if(is.matrix(advice)) {
             advice = rowSums(advice) 
@@ -419,6 +436,7 @@ loop_through_fn = function(om,
           interval.info = list(catch = advice, years = y + 1:assess_interval)
           
           info = generate_basic_info(base.years = em.years)
+          
           info = generate_NAA_where(basic_info = info, move.type = move.type)
           
           info$catch_info$agg_catch = om$input$data$agg_catch[1:length(em.years),,drop = F]
@@ -485,7 +503,7 @@ loop_through_fn = function(om,
           if (!conv | !pdHess) warning("Assessment model is not converged!")
           
           # make the catch advice
-          advice = advice_fn(em, pro.yr = assess_interval)
+          advice = advice_fn(em, pro.yr = assess_interval, hcr.type = hcr.type, hcr.opts = hcr.opts)
           
           if(is.matrix(advice)) {
             advice = rowSums(advice) 
@@ -498,6 +516,7 @@ loop_through_fn = function(om,
           interval.info = list(catch = advice, years = y + 1:assess_interval)
           
           info = generate_basic_info(base.years = em.years)
+          
           info = generate_NAA_where(basic_info = info, move.type = move.type)
           
           info$catch_info$agg_catch = om$input$data$agg_catch[1:length(em.years),,drop = F]
@@ -560,7 +579,7 @@ loop_through_fn = function(om,
         if (!conv | !pdHess) warning("Assessment model is not converged!")
         
         # make the catch advice
-        advice = advice_fn(em, pro.yr = assess_interval)
+        advice = advice_fn(em, pro.yr = assess_interval, hcr.type = hcr.type, hcr.opts = hcr.opts)
         
         if(is.matrix(advice)) {
           advice = rowSums(advice) 
@@ -573,6 +592,7 @@ loop_through_fn = function(om,
         interval.info = list(catch = advice, years = y + 1:assess_interval)
         
         info = generate_basic_info(base.years = em.years)
+        
         info = generate_NAA_where(basic_info = info, move.type = move.type)
         
         info$catch_info$agg_catch = om$input$data$agg_catch[1:length(em.years),,drop = F]
