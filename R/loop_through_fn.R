@@ -41,7 +41,7 @@
 #'     }
 #' @param age_comp_em Likelihood distribution of age composition data in the assessment model
 #'   \itemize{
-#'     \item \code{"multinomial"} Default
+#'     \item \code{"multinomial"} (Default)
 #'     \item \code{"dir-mult"}
 #'     \item \code{"dirichlet-miss0"}
 #'     \item \code{"dirichlet-pool0"}
@@ -59,8 +59,10 @@
 #' @param assess_interval Assessment interval used in the MSE feedback loop
 #' @param base_years Years used in the burn-in period
 #' @param year.use Number of years used in the assessment model
+#' @param do.retro 	T/F do retrospective analysis? Default = TRUE.
+#' @param do.osa T/F calculate one-step-ahead (OSA) residuals? Default = TRUE.
 #' @param seed Seed used for generate data
-#' @param save.sdrep T/F save the full report (memory intensive) 
+#' @param save.sdrep T/F save the full report of the assessment model (memory intensive) 
 #' 
 #' @return a list of model output
 #'   \describe{
@@ -69,7 +71,7 @@
 #'     \item{\code{$em_list}}{Short report of each assessment model}
 #'     \item{\code{$opt_list}}{Output from \code{\link[stats:nlminb]{stats::nlminb}}}
 #'     \item{\code{$converge_list}}{Convergence from each assessment model}
-#'     \item{\code{$om_full}}{Full report of each assessment model}
+#'     \item{\code{$em_full}}{Full report of each assessment model}
 #'   }
 #'   
 #' @export
@@ -94,6 +96,8 @@ loop_through_fn = function(om,
                            assess_interval = NULL, 
                            base_years = NULL, 
                            year.use = 30,
+                           do.retro = FALSE,
+                           do.osa = FALSE,
                            seed = 123,
                            save.sdrep = FALSE) {
   
@@ -119,7 +123,7 @@ loop_through_fn = function(om,
   opt_list <- list()
   converge_list <- list()
   
-  if(save.sdrep) om_full <- list()
+  if(save.sdrep) em_full <- list()
   
   if (em.opt$separate.em) {
     
@@ -134,7 +138,7 @@ loop_through_fn = function(om,
         opt_list[[i]] <- list()
         converge_list[[i]] <- list()
         
-        if(save.sdrep) om_full[[i]] <- list()
+        if(save.sdrep) em_full[[i]] <- list()
         
         em.years = base_years[1]:y
         
@@ -211,7 +215,7 @@ loop_through_fn = function(om,
           sdrep_list[[i]][[s]] <- em[[s]]$sdrep$par.fixed
           opt_list[[i]][[s]] <- em[[s]]$opt
           converge_list[[i]][[s]] <- sum(conv,pdHess)
-          if(save.sdrep) om_full[[i]][[s]] <- em[[s]]
+          if(save.sdrep) em_full[[i]][[s]] <- em[[s]]
         }
       }
     }
@@ -287,7 +291,7 @@ loop_through_fn = function(om,
         sdrep_list[[i]] <- em$sdrep$par.fixed
         opt_list[[i]] <- em$opt
         converge_list[[i]] <- conv+pdHess
-        if(save.sdrep) om_full[[i]] <- em
+        if(save.sdrep) em_full[[i]] <- em
       }
     }
     
@@ -365,7 +369,7 @@ loop_through_fn = function(om,
         sdrep_list[[i]] <- em$sdrep$par.fixed
         opt_list[[i]] <- em$opt
         converge_list[[i]] <- conv+pdHess
-        if(save.sdrep) om_full[[i]] <- em
+        if(save.sdrep) em_full[[i]] <- em
       }
     }
     
@@ -445,7 +449,7 @@ loop_through_fn = function(om,
           sdrep_list[[i]] <- em$sdrep$par.fixed
           opt_list[[i]] <- em$opt
           converge_list[[i]] <- conv+pdHess
-          if(save.sdrep) om_full[[i]] <- em
+          if(save.sdrep) em_full[[i]] <- em
         }
       } else { # equivalent to if(do.move & !est.move)
         
@@ -524,7 +528,7 @@ loop_through_fn = function(om,
           sdrep_list[[i]] <- em$sdrep$par.fixed
           opt_list[[i]] <- em$opt
           converge_list[[i]] <- conv+pdHess
-          if(save.sdrep) om_full[[i]] <- em
+          if(save.sdrep) em_full[[i]] <- em
         }
       }
     } else { # equivalent to if(!do.move)
@@ -599,10 +603,10 @@ loop_through_fn = function(om,
         sdrep_list[[i]] <- em$sdrep$par.fixed
         opt_list[[i]] <- em$opt
         converge_list[[i]] <- conv+pdHess
-        if(save.sdrep) om_full[[i]] <- em
+        if(save.sdrep) em_full[[i]] <- em
       }
     }
   }
-  if(save.sdrep) return(list(om = om, sdrep_list = sdrep_list, em_list  = em_list, opt_list = opt_list, converge_list = converge_list, om_full = om_full))
-  return(list(om = om, sdrep_list = sdrep_list, em_list  = em_list, opt_list = opt_list, converge_list = converge_list, om_full = NULL))
+  if(save.sdrep) return(list(om = om, sdrep_list = sdrep_list, em_list  = em_list, opt_list = opt_list, converge_list = converge_list, em_full = em_full))
+  return(list(om = om, sdrep_list = sdrep_list, em_list  = em_list, opt_list = opt_list, converge_list = converge_list, em_full = NULL))
 }

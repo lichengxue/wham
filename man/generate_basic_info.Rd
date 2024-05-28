@@ -17,7 +17,8 @@ generate_basic_info(
   Fbar_ages = 12,
   recruit_model = 2,
   q = 0.2,
-  F_info = list(F.year1 = 0.2, Fhist = "constant"),
+  F_info = list(F.year1 = 0.2, Fhist = "constant", Fmax = 0.2, Fmin = 0.2, change_time =
+    0.5),
   catch_info = list(catch_cv = 0.1, catch_Neff = 200),
   index_info = list(index_cv = 0.2, index_Neff = 100, fracyr_indices = 0.5),
   fracyr_spawn = 0.5,
@@ -68,9 +69,12 @@ generate_basic_info(
   \item \code{$F.year1} fishing mortality in the first year
   \item \code{$Fhist}: \cr
   {"constant"} = constant across years \cr
-  {"updown"}   = increase from F.year1 to F.year1+0.2 and decrease to F.year1 \cr
-  {"downup"}   = decrease from F.year1 to F.year1-0.2 and increase to F.year1 \cr
-  {"Fmsy-H-L"} = 2.5xFmsy in the 1st half and Fmsy in the 2nd half
+  {"updown"}   = increase from F.year1 to Fmax until a change point and then decrease to Fmin \cr
+  {"downup"}   = decrease from F.year1 to Fmin until a change point and then increase to Fmax \cr
+  {"Fmsy-H-L"} = constant Fmax(a multiplier)xFmsy until the change point and then constant Fmin(a multiplier)xFmsy
+  \item \code{$Fmax} maximum F (or a multiplier when Fhist = "Fmsy-H-L")
+  \item \code{$Fmin} minimum F (or a multiplier when Fhist = "Fmsy-H-L")
+  \item \code{$change_time} a ratio that determines the change point
   }}
 
 \item{catch_info}{Fleet information

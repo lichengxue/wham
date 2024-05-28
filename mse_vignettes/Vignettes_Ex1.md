@@ -133,18 +133,32 @@ sel <- list(model=rep("logistic",n_fleets+n_indices),
             initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)),
             fix_pars=rep(list(NULL),n_fleets+n_indices))
 
-# NAA Configuration
-sigma      <- "rec+1"
-re_cor     <- "iid"
-# option   <- c("age-specific-fe", "equilibrium","iid-re", "ar1-re")
-ini.opt    <- "equilibrium"
-NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
-               sigma=rep(sigma,n_stocks),
-               cor=rep(re_cor,n_stocks))
-
 # M Configuration
 M <- list(model="constant") # Default is M = 0.2
 # M <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
+
+# Configure NAA random effects
+sigma        <- "rec+1"
+re_cor       <- "iid"
+ini.opt      <- "equilibrium" # option   <- c("age-specific-fe", "equilibrium")
+Rec_sig    <- 0.2 # (sigma for recruitment)
+NAA_sig    <- 0.2 # (sigma for NAA)
+
+# Set initial NAA for each stock
+log_N1 = c(log(exp(10)*2), 10) # Create difference between stocks
+N1_pars <- generate_ini_N1(log_N1,basic_info,ini.opt)
+
+# Set mean recruitment para. for each stock
+mean_rec_par <- list()
+for (i in 1:n_stocks) mean_rec_par[[i]] = exp(log_N1[i])
+
+NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
+               sigma=rep(sigma,n_stocks),
+               cor=rep(re_cor,n_stocks),
+               recruit_model = 2,  # rec random around the mean
+               recruit_pars = mean_rec_par, 
+               sigma_vals = rep(list(c(Rec_sig,rep(NAA_sig,n_ages-1))),n_stocks),  # two sigmas when "rec+1"
+               N1_pars = N1_pars)
 ````
 ### 5. Generate wham input 
 ```r

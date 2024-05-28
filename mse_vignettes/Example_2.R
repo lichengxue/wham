@@ -12,8 +12,6 @@ main.dir = "where/you/save/your/wham/package"
 
 library(wham)
 
-# roxygen2::roxygenize(file.path(main.dir,"wham"))
-
 # Create a folder to save your results
 folder.name = "Example_2"
 sub.dir <- folder.name
@@ -64,6 +62,7 @@ basic_info <- generate_NAA_where(basic_info = basic_info, move.type = 2)
 # Note: default is move = 0.3 (constant) for stock1 and 0.1 (constant) for the other stocks
 move <- generate_move(basic_info = basic_info, move.type = 2, move.rate = 0.3, move.re = "constant")
 
+### 4. Configure selecitvity and natural mortality
 n_stocks  <- as.integer(basic_info['n_stocks'])
 n_regions <- as.integer(basic_info['n_regions'])
 n_fleets  <- as.integer(basic_info['n_fleets'])
@@ -77,24 +76,46 @@ sel <- list(model=rep("logistic",n_fleets+n_indices),
             initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)),
             fix_pars=rep(list(NULL),n_fleets+n_indices))
 
-# NAA Configuration
-sigma      <- "rec+1"
-re_cor     <- "iid"
-# option   <- c("age-specific-fe", "equilibrium","iid-re", "ar1-re")
-ini.opt    <- "equilibrium"
-NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
-               sigma=rep(sigma,n_stocks),
-               cor=rep(re_cor,n_stocks))
-
 # M Configuration
-# M <- list(model="constant") # Default is M = 0.2
 M <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
 
-input <- prepare_wham_input(basic_info = basic_info, selectivity = sel, M = M, NAA_re = NAA_re, move = move)
+# Configure NAA random effects
+sigma        <- "rec+1"
+re_cor       <- "iid"
+ini.opt      <- "equilibrium" # option   <- c("age-specific-fe", "equilibrium")
+Rec_sig    <- 0.2 # (sigma for recruitment)
+NAA_sig    <- 0.2 # (sigma for NAA)
 
-input$par$mean_rec_pars[1,1] <- log(exp(10)*2) # Change mean rec for first stock
-input$par$log_N1[1,1,1]      <- log(exp(10)*2) # Change initial N1 for the first stock
-input$par$log_NAA_sigma[]    <- log(0.2) # Change the sigma for NAA (Rec+1) to be log(0.5)
+# Set initial NAA for each stock
+log_N1 = c(log(exp(10)*2), 10) # Create difference between stocks
+N1_pars <- generate_ini_N1(log_N1,basic_info,ini.opt)
+
+# Set mean recruitment para. for each stock
+mean_rec_par <- list()
+for (i in 1:n_stocks) mean_rec_par[[i]] = exp(log_N1[i])
+
+NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
+               sigma=rep(sigma,n_stocks),
+               cor=rep(re_cor,n_stocks),
+               recruit_model = 2,  # rec random around the mean
+               recruit_pars = mean_rec_par, 
+               sigma_vals = rep(list(c(Rec_sig,rep(NAA_sig,n_ages-1))),n_stocks),  # two sigmas when "rec+1"
+               N1_pars = N1_pars)
+
+# recruit_model = 1: estimating annual recruitments as fixed effects or a random walk if NAA_re$sigma specified
+# recruit_model = 2: estimating a mean recruitment with annual recruitments as random effects
+# recruit_model = 3: Beverton-Holt stock-recruitment with annual recruitments as random effects
+# recruit_model = 4: Ricker stock-recruitment with annual recruitments as random effects
+
+# 1. recruit_pars: a list (length = n_stocks) of vectors of initial parameters for recruitment model. 
+# If $recruit_model is 3 (B-H) or 4 (Ricker), parameters are "alpha" and "beta".
+
+# 2. sigma_vals: Initial standard deviation values to use for the NAA deviations. Values are not used if recruit_model = 1 
+# If sigma="rec": must be a list (length = n_stocks) of single values
+# If sigma="rec+1": a list (length = n_stocks) of 2 values must be specified. First is for the first age class (recruits), second is for all other ages.
+
+# Generate wham input 
+input <- prepare_wham_input(basic_info = basic_info, selectivity = sel, M = M, NAA_re = NAA_re, move = move)
 
 # Global SPR is calculated based on weights of mean rec par 
 input$data$SPR_weight_type = 1

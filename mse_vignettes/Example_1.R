@@ -4,14 +4,13 @@
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 
-# main.dir = here::here()
-main.dir = "where/you/save/your/wham/package"
+# main.dir = "where/you/save/your/wham/package"
+main.dir = here::here()
 
 # install.packages(file.path(main.dir,"wham"), dependencies = TRUE, repos = NULL, type = "source")
 # devtools::install_local(file.path(main.dir,"wham"), dependencies = TRUE)
 
 library(wham)
-
 # roxygen2::roxygenize("wham")
 
 # Create a folder to save your results
@@ -76,24 +75,34 @@ sel <- list(model=rep("logistic",n_fleets+n_indices),
             initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)),
             fix_pars=rep(list(NULL),n_fleets+n_indices))
 
-# NAA Configuration
-sigma      <- "rec+1"
-re_cor     <- "iid"
-# option   <- c("age-specific-fe", "equilibrium","iid-re", "ar1-re")
-ini.opt    <- "equilibrium"
-NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
-               sigma=rep(sigma,n_stocks),
-               cor=rep(re_cor,n_stocks))
-
 # M Configuration
 M <- list(model="constant") # Default is M = 0.2
 # M <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
 
-input <- prepare_wham_input(basic_info = basic_info, selectivity = sel, M = M, NAA_re = NAA_re, move = move)
+# Configure NAA random effects
+sigma        <- "rec+1"
+re_cor       <- "iid"
+ini.opt      <- "equilibrium" # option   <- c("age-specific-fe", "equilibrium")
+Rec_sig    <- 0.2 # (sigma for recruitment)
+NAA_sig    <- 0.2 # (sigma for NAA)
 
-input$par$mean_rec_pars[1,1] <- log(exp(10)*2) # Change mean rec for first stock
-input$par$log_N1[1,1,1]      <- log(exp(10)*2) # Change initial N1 for the first stock
-input$par$log_NAA_sigma[]    <- log(0.5) # Change the sigma for NAA (Rec+1) to be log(0.5)
+# Set initial NAA for each stock
+log_N1 = c(log(exp(10)*2), 10) # Create difference between stocks
+N1_pars <- generate_ini_N1(log_N1,basic_info,ini.opt)
+
+# Set mean recruitment para. for each stock
+mean_rec_par <- list()
+for (i in 1:n_stocks) mean_rec_par[[i]] = exp(log_N1[i])
+
+NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
+               sigma=rep(sigma,n_stocks),
+               cor=rep(re_cor,n_stocks),
+               recruit_model = 2,  # rec random around the mean
+               recruit_pars = mean_rec_par, 
+               sigma_vals = rep(list(c(Rec_sig,rep(NAA_sig,n_ages-1))),n_stocks),  # two sigmas when "rec+1"
+               N1_pars = N1_pars)
+
+input <- prepare_wham_input(basic_info = basic_info, selectivity = sel, M = M, NAA_re = NAA_re, move = move)
 
 om = fit_wham(input, do.fit = F, do.brps = F, MakeADFun.silent = TRUE)
 
@@ -170,7 +179,7 @@ plot_wham_output(cross_sim_fit, out.type = "html")
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 
-nsim = 3
+nsim = 100
 set.seed(8675309) 
 sim_input = list()
 sim_input = lapply(1:nsim, function(x) {
@@ -214,7 +223,3 @@ SSB = lapply(1:nsim, function(x){
   return(SSB)
 })
 print(SSB)
-
-
-
-

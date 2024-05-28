@@ -32,9 +32,12 @@
 #'     \item \code{$F.year1} fishing mortality in the first year
 #'     \item \code{$Fhist}: \cr
 #'     {"constant"} = constant across years \cr
-#'     {"updown"}   = increase from F.year1 to F.year1+0.2 and decrease to F.year1 \cr
-#'     {"downup"}   = decrease from F.year1 to F.year1-0.2 and increase to F.year1 \cr
-#'     {"Fmsy-H-L"} = 2.5xFmsy in the 1st half and Fmsy in the 2nd half
+#'     {"updown"}   = increase from F.year1 to Fmax until a change point and then decrease to Fmin \cr
+#'     {"downup"}   = decrease from F.year1 to Fmin until a change point and then increase to Fmax \cr
+#'     {"Fmsy-H-L"} = constant Fmax(a multiplier)xFmsy until the change point and then constant Fmin(a multiplier)xFmsy
+#'     \item \code{$Fmax} maximum F (or a multiplier when Fhist = "Fmsy-H-L")
+#'     \item \code{$Fmin} minimum F (or a multiplier when Fhist = "Fmsy-H-L")
+#'     \item \code{$change_time} a ratio that determines the change point
 #'     }
 #' @param catch_info Fleet information
 #'   \itemize{
@@ -59,7 +62,10 @@
 #'
 #' @seealso \code{\link{prepare_wham_input}}
 #'
-
+#' @examples
+#' \dontrun{
+#' data <- generate_basic_info()
+#' 
 generate_basic_info <- function(n_stocks = 2, 
                                 n_regions = 2, 
                                 n_indices = 2, 
@@ -72,7 +78,7 @@ generate_basic_info <- function(n_stocks = 2,
                                 Fbar_ages = 12, 
                                 recruit_model = 2, 
                                 q = 0.2, 
-                                F_info = list(F.year1 = 0.2, Fhist = "constant"),
+                                F_info = list(F.year1 = 0.2, Fhist = "constant", Fmax = 0.2, Fmin = 0.2, change_time = 0.5),
                                 catch_info = list(catch_cv = 0.1,catch_Neff = 200),
                                 index_info = list(index_cv = 0.2,index_Neff = 100, fracyr_indices = 0.5),
                                 fracyr_spawn = 0.5,
@@ -127,20 +133,24 @@ generate_basic_info <- function(n_stocks = 2,
     F.year1 = F_info$F.year1
     if(F_info$Fhist == "constant") {
       F = matrix(F.year1, nby, n_fleets)
-    }
-    if(F_info$Fhist == "updown") {
-      mid <- floor(nby/2)
-      F = matrix(F.year1 + c(seq(0,0.2,length.out = mid),seq(0.2,0,length.out=nby-mid)),nby, n_fleets)
-    } 
-    if(F_info$Fhist == "downup") {
-      mid <- floor(nby/2)
-      F = matrix(F.year1 + c(seq(0,-0.2,length.out = mid),seq(-0.2,0,length.out=nby-mid)),nby, n_fleets)
-    } 
-    if(F_info$Fhist == "Fmsy-H-L") {
-      year_change <- floor(nby * 0.5)
-      max_mult = 2.5; min_mult = 1
-      F <- matrix(F.year1*min_mult,nby, n_fleets)
-      F[1:year_change,] = F.year1*max_mult
+    } else {
+      Fmax = F_info$Fmax
+      if(is.null(Fmax)) stop("Fmax must be specified!")
+      Fmin = F_info$Fmin
+      if(is.null(Fmin)) stop("Fmin must be specified!")
+      change_time = F_info$change_time
+      if(is.null(change_time)) stop("change_time must be specified!")
+      mid <- ceiling(nby*change_time)
+      if(F_info$Fhist == "updown") {
+        F = matrix(c(seq(F.year1,Fmax,length.out = mid),seq(Fmax,Fmin,length.out=nby-mid+1)[-1]),nby, n_fleets)
+      } 
+      if(F_info$Fhist == "downup") {
+        F = matrix(c(seq(F.year1,Fmin,length.out = mid),seq(Fmin,Fmax,length.out=nby-mid+1)[-1]),nby, n_fleets)
+      } 
+      if(F_info$Fhist == "Fmsy-H-L") {
+        F <- matrix(F.year1*Fmin,nby, n_fleets)
+        F[1:mid,] = F.year1*Fmax
+      }
     }
   }
   if(n_feedback_years>0) F <- rbind(F, F[rep(nby, n_feedback_years),, drop = F])

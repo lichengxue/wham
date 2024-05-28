@@ -22,6 +22,8 @@ loop_through_fn(
   assess_interval = NULL,
   base_years = NULL,
   year.use = 30,
+  do.retro = FALSE,
+  do.osa = FALSE,
   seed = 123,
   save.sdrep = FALSE
 )
@@ -29,15 +31,32 @@ loop_through_fn(
 \arguments{
 \item{om}{Operating model including pseudo data}
 
-\item{M_om}{Natural mortality configuration in the OM}
+\item{M_om}{Natural mortality configuration in the operating model}
 
-\item{sel_om}{Selectivity configuration in the OM}
+\item{sel_om}{Selectivity configuration in the operating model}
 
-\item{NAA_re_om}{Numbers-at-age (NAA) configuration in the OM}
+\item{NAA_re_om}{Numbers-at-age (NAA) configuration in the operating model}
 
 \item{mean_rec_weights}{A vector of weights given to each stock (default = NULL)}
 
-\item{move_om}{Movement configuration in the OM}
+\item{move_om}{Movement configuration in the operating model}
+
+\item{age_comp_om}{Likelihood distribution of age composition data in the operating model
+\itemize{
+  \item \code{"multinomial"} Default
+  \item \code{"dir-mult"}
+  \item \code{"dirichlet-miss0"}
+  \item \code{"dirichlet-pool0"}
+  \item \code{"dir-mult"}
+  \item \code{"logistic-normal-miss0"}    
+  \item \code{"logistic-normal-ar1-miss0"}
+  \item \code{"logistic-normal-pool0"}
+  \item \code{"logistic-normal-01-infl"}
+  \item \code{"logistic-normal-pool0"}
+  \item \code{"logistic-normal-01-infl-2par"}
+  \item \code{"mvtweedie"}
+  \item \code{"dir-mult-linear"}
+  }}
 
 \item{M_em}{Natural mortality configuration in the assessment model}
 
@@ -58,6 +77,23 @@ loop_through_fn(
   \item \code{$est.move} T/F movement rate is estimated (use when separate.em = FALSE)
   }}
 
+\item{age_comp_em}{Likelihood distribution of age composition data in the assessment model
+\itemize{
+  \item \code{"multinomial"} (Default)
+  \item \code{"dir-mult"}
+  \item \code{"dirichlet-miss0"}
+  \item \code{"dirichlet-pool0"}
+  \item \code{"dir-mult"}
+  \item \code{"logistic-normal-miss0"}    
+  \item \code{"logistic-normal-ar1-miss0"}
+  \item \code{"logistic-normal-pool0"}
+  \item \code{"logistic-normal-01-infl"}
+  \item \code{"logistic-normal-pool0"}
+  \item \code{"logistic-normal-01-infl-2par"}
+  \item \code{"mvtweedie"}
+  \item \code{"dir-mult-linear"}
+  }}
+
 \item{assess_years}{Year in which the assessment is conducted}
 
 \item{assess_interval}{Assessment interval used in the MSE feedback loop}
@@ -66,9 +102,13 @@ loop_through_fn(
 
 \item{year.use}{Number of years used in the assessment model}
 
+\item{do.retro}{T/F do retrospective analysis? Default = TRUE.}
+
+\item{do.osa}{T/F calculate one-step-ahead (OSA) residuals? Default = TRUE.}
+
 \item{seed}{Seed used for generate data}
 
-\item{save.sdrep}{T/F save the full report (memory intensive)}
+\item{save.sdrep}{T/F save the full report of the assessment model (memory intensive)}
 }
 \value{
 a list of model output
@@ -78,7 +118,7 @@ a list of model output
     \item{\code{$em_list}}{Short report of each assessment model}
     \item{\code{$opt_list}}{Output from \code{\link[stats:nlminb]{stats::nlminb}}}
     \item{\code{$converge_list}}{Convergence from each assessment model}
-    \item{\code{$om_full}}{Full report of each assessment model}
+    \item{\code{$em_full}}{Full report of each assessment model}
   }
 }
 \description{
