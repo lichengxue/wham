@@ -45,6 +45,13 @@ a named list with the following components:
 \description{
 The generate_move() function is used to configure movement random effects
 }
+\examples{
+\dontrun{
+data <- generate_basic_info()
+data <- generate_move(data, move.type = 2, move.rate = 0.3, move.re = "constant")
+}
+
+}
 \seealso{
-\code{\link{set_move}}
+\code{\link{set_move}} and \code{\link{generate_NAA_where}}
 }

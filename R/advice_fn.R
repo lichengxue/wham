@@ -26,6 +26,7 @@
 #' input$data = mod$simulate(complete=TRUE)
 #' mod <- fit_wham(input, do.osa = FALSE, do.retro = FALSE, MakeADFun.silent = FALSE)
 #' catch <- advice_fn(mod, pro.yr = 3, type = 1)
+#' }
 #' 
 advice_fn = function(em, pro.yr = assess.interval, type = 1){
   proj_opts = list(n.yrs=pro.yr, use.FXSPR=TRUE, avg.yrs=tail(em$years,5),percentFXSPR=75, percentSPR=40) 

@@ -9,6 +9,14 @@
 #'   
 #' @export
 #' 
+#' @examples
+#' \dontrun{
+#' basic_info <- generate_basic_info()
+#' input <- prepare_wham_input(basic_info = basic_info)
+#' mod <- fit_wham(input, do.fit = FALSE)
+#' data <- generate_data(mod, seed = 123)
+#' }
+#' 
 generate_data = function(om, seed = 123) {
   
   obs_names = c("agg_indices","agg_catch","catch_paa","index_paa", "Ecov_obs", "obsvec")

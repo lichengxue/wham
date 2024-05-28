@@ -7,7 +7,9 @@
 update_om_fn(om, om2, interval.info, seed = 123)
 }
 \arguments{
-\item{om}{Operating model}
+\item{om}{Operating model with years including burn-in + all feedback years}
+
+\item{om2}{Operating model with years including burn-in years + n feedback years (n = the number of assessments completed x assessment interval)}
 
 \item{interval.info}{Catch advice for a number of years projected from the estimation model
 \itemize{
@@ -15,6 +17,8 @@ update_om_fn(om, om2, interval.info, seed = 123)
   \item \code{"$catch"} matrix (n_region x n_years) projected catch 
   \item \code{"=NULL"} generate data in the OM
   }}
+
+\item{seed}{Seed used to generate data}
 }
 \value{
 an operating model with simulated data and updated F time series

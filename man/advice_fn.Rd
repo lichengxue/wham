@@ -24,6 +24,18 @@ a list of catch advice
 \description{
 a function to generate catch advice for management strategy evaluation.
 }
+\examples{
+\dontrun{
+data <- generate_basic_info(n_stocks = 2, n_regions = 2, n_indices = 2, n_fleets = 2, base.years = 2003:2022)
+NAA_re <- list(N1_model=c("equilibrium","equilibrium"),sigma=c("rec","rec"),cor=c("iid","iid"),recruit_model = 2)
+input <- prepare_wham_input(basic_info = data, NAA_re = NAA_re)
+mod <- fit_wham(input, do.fit = FALSE)
+input$data = mod$simulate(complete=TRUE)
+mod <- fit_wham(input, do.osa = FALSE, do.retro = FALSE, MakeADFun.silent = FALSE)
+catch <- advice_fn(mod, pro.yr = 3, type = 1)
+}
+
+}
 \seealso{
 \code{\link{project_wham}}
 }

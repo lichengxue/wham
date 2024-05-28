@@ -25,3 +25,10 @@ an array of numbers-at-age (n_stocks x n_regions x n_ages)
 \description{
 Generate initial numbers-at-age
 }
+\examples{
+\dontrun{
+basic_info <- generate_basic_info()
+N1_pars <- generate_ini_N1(log_N1 = c(10.6,10), basic_info, ini.opt = "equilibrium") 
+}
+
+}

@@ -30,9 +30,14 @@
 #'   
 #' @export
 #'
-#' @seealso \code{\link{set_move}}
+#' @seealso \code{\link{set_move}} and \code{\link{generate_NAA_where}}
 #' 
-
+#' @examples
+#' \dontrun{
+#' data <- generate_basic_info()
+#' data <- generate_move(data, move.type = 2, move.rate = 0.3, move.re = "constant")
+#' }
+#' 
 generate_move <- function(basic_info = basic_info, 
                           move.type = 2,
                           move.rate = 0.3, 

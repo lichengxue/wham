@@ -10,7 +10,7 @@ make_em_input(
   sel_em = NULL,
   NAA_re_em = NULL,
   move_em = NULL,
-  em.opt = em.opt,
+  em.opt = NULL,
   em_years = NULL,
   year.use = NULL,
   age_comp_em = "multinomial"
@@ -64,6 +64,14 @@ a wham input
 }
 \description{
 a function to generate the input for the estimation model for management strategy evaluation.
+}
+\examples{
+\dontrun{
+data <- generate_basic_info()
+input <- prepare_wham_input(basic_info = data)
+mod <- fit_wham(input, do.fit = FALSE)
+data <- make_em_input(mod,em.opt = list(separate.em = TRUE, separate.em.type = 1, do.move = FALSE, est.move = FALSE), year.use = 10, em_years = 1973:2022)
+}
 }
 \seealso{
 \code{\link{loop_through_fn}}

@@ -61,7 +61,7 @@
 #' @param year.use Number of years used in the assessment model
 #' @param do.retro 	T/F do retrospective analysis? Default = TRUE.
 #' @param do.osa T/F calculate one-step-ahead (OSA) residuals? Default = TRUE.
-#' @param seed Seed used for generate data
+#' @param seed Seed used for generating data
 #' @param save.sdrep T/F save the full report of the assessment model (memory intensive) 
 #' 
 #' @return a list of model output

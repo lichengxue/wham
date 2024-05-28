@@ -41,18 +41,25 @@
 #' @export
 #'
 #' @seealso \code{\link{loop_through_fn}}
-#'
+#' @examples
+#' \dontrun{
+#' data <- generate_basic_info()
+#' input <- prepare_wham_input(basic_info = data)
+#' mod <- fit_wham(input, do.fit = FALSE)
+#' data <- make_em_input(mod,em.opt = list(separate.em = TRUE, separate.em.type = 1, do.move = FALSE, est.move = FALSE), year.use = 10, em_years = 1973:2022)
+#' }
 
 make_em_input = function(om, 
                          M_em = NULL, 
                          sel_em = NULL, 
                          NAA_re_em = NULL, 
                          move_em = NULL,
-                         em.opt = em.opt,
+                         em.opt = NULL,
                          em_years = NULL,
                          year.use = NULL,
                          age_comp_em = "multinomial") {
   
+  if(is.null(em.opt)) stop("em.opt must be specified!")
   if (em.opt$separate.em) em.opt$do.move = FALSE 
   if (!em.opt$separate.em & !em.opt$do.move) move.type = 3 # no movement
   if (!em.opt$separate.em & em.opt$do.move & all(move_em$stock_move)) move.type = 2 # bidirectional

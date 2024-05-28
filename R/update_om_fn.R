@@ -2,14 +2,16 @@
 #' 
 #' Function to update F in the operating model (see \code{\link{update_om_F}}) and generate data given the updated F.
 #' 
-#' @param om Operating model 
+#' @param om Operating model with years including burn-in + all feedback years
+#' @param om2 Operating model with years including burn-in years + n feedback years (n = the number of assessments completed x assessment interval)
 #' @param interval.info Catch advice for a number of years projected from the estimation model
 #'   \itemize{
 #'     \item \code{"$years"} projection years 
 #'     \item \code{"$catch"} matrix (n_region x n_years) projected catch 
 #'     \item \code{"=NULL"} generate data in the OM
 #'     }
-#'     
+#' @param seed Seed used to generate data
+#' 
 #' @return an operating model with simulated data and updated F time series
 #'   
 #' @export

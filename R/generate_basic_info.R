@@ -65,6 +65,7 @@
 #' @examples
 #' \dontrun{
 #' data <- generate_basic_info()
+#' }
 #' 
 generate_basic_info <- function(n_stocks = 2, 
                                 n_regions = 2, 

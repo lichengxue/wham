@@ -15,8 +15,14 @@
 #'
 #' @export
 #'
-#' @seealso \code{\link{prepare_wham_input}}
-
+#' @seealso \code{\link{prepare_wham_input}} and \code{\link{generate_move}}
+#' 
+#' @examples
+#' \dontrun{
+#' basic_info <- generate_basic_info()
+#' basic_info <- generate_NAA_where(basic_info = basic_info, move.type = 2)
+#' }
+#' 
 generate_NAA_where <- function(basic_info = basic_info, 
                                move.type = 2) {
   

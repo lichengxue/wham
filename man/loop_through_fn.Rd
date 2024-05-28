@@ -106,7 +106,7 @@ loop_through_fn(
 
 \item{do.osa}{T/F calculate one-step-ahead (OSA) residuals? Default = TRUE.}
 
-\item{seed}{Seed used for generate data}
+\item{seed}{Seed used for generating data}
 
 \item{save.sdrep}{T/F save the full report of the assessment model (memory intensive)}
 }

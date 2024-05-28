@@ -17,3 +17,12 @@ an operating model with simulated data
 \description{
 Function to use the operating model to generate data
 }
+\examples{
+\dontrun{
+basic_info <- generate_basic_info()
+input <- prepare_wham_input(basic_info = basic_info)
+mod <- fit_wham(input, do.fit = FALSE)
+data <- generate_data(mod, seed = 123)
+}
+
+}

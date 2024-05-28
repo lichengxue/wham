@@ -23,6 +23,13 @@ A list of information that will be used to prepare wham input
 The generate_NAA_where() function is used to generate an array (n_stocks,n_regions,n_ages) 
 which determines whether or not (T/F) the stock from a certain age can be present in a specific region.
 }
+\examples{
+\dontrun{
+basic_info <- generate_basic_info()
+basic_info <- generate_NAA_where(basic_info = basic_info, move.type = 2)
+}
+
+}
 \seealso{
-\code{\link{prepare_wham_input}}
+\code{\link{prepare_wham_input}} and \code{\link{generate_move}}
 }

@@ -8,6 +8,14 @@
 #'   
 #' @export
 #'
+#' @examples
+#' \dontrun{
+#' basic_info <- generate_basic_info()
+#' move <- generate_move(basic_info = basic_info, move.type = 2, move.rate = 0.3, move.re = "constant")
+#' input <- prepare_wham_input(basic_info = basic_info, move = move)
+#' input <- fix_move(input)
+#' }
+#' 
 fix_move <- function(input) {
   temp <- array(as.integer(input$map$trans_mu), dim = dim(input$par$trans_mu))
   temp[] <- NA

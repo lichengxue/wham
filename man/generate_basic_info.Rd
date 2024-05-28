@@ -108,6 +108,12 @@ The generate_basic_info() function is used to generate biological and fishery in
 simulation-estimation work and management strategy evaluation. 
 Note that not all information is included here. More details can be found in \code{\link{prepare_wham_input}}
 }
+\examples{
+\dontrun{
+data <- generate_basic_info()
+}
+
+}
 \seealso{
 \code{\link{prepare_wham_input}}
 }
