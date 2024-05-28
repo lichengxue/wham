@@ -156,6 +156,7 @@ NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
 # 2. sigma_vals: Initial standard deviation values to use for the NAA deviations. Values are not used if recruit_model = 1 
 # If sigma="rec": must be a list (length = n_stocks) of single values
 # If sigma="rec+1": a list (length = n_stocks) of 2 values must be specified. First is for the first age class (recruits), second is for all other ages.
+````
 
 ### 5. Generate wham input 
 ```r
