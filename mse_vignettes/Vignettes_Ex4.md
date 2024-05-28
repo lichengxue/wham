@@ -1,4 +1,4 @@
-## Example 5: B-H Stock-Recruitment Relationship
+## Example 4: B-H Stock-Recruitment Relationship
 
 ### 1. Create a folder to save your results
 ```r
@@ -9,7 +9,7 @@ main.dir = "where/you/save/your/wham/package"
 # devtools::install_local(file.path(main.dir,"wham"), dependencies = TRUE)
 
 library(wham)
-folder.name = "Example_5"
+folder.name = "Example_4"
 sub.dir <- folder.name
 if (file.exists(sub.dir)){
   setwd(file.path(main.dir,sub.dir))
