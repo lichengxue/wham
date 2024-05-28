@@ -2,22 +2,22 @@
 The “multi-wham-mse” package is used to perform management strategy evaluation (MSE) in the situation where population structure is complex (e.g. multiple stocks in multiple regions) with different movement dynamics (e.g. natal homing). This package is designed specifically for the Woods Hole Assessment Model (WHAM), a state-space age-structured stock assessment model. So far, WHAM can incorporate multiple sources of process errors (treated as random effects) such as deviations in (1) recruitment/numbers-at-age, (2) selectivity, (3) natural mortality, (4) catchability, and (5) movement. WHAM is also capable of including environmental effects on population processes. 
 ## Download "multi-wham-mse" package (for git users)
 You can download the “mse” branch of the “wham” package from Github by following the steps below:
-#### 1. Open "Command Prompt" in your local computer.
-#### 2. Type "cd directory" here you can type a specific path (replace "directory") to save the package (you can also skip this step and the package will be saved in the main directory). 
-#### 3. Type "git clone -b mse https://github.com/lichengxue/wham.git".
-#### 4. Close the Command and check if the package has been saved in the directory.
-
-## Download "multi-wham-mse" package (for non-git users)
-You can download the “mse” branch of the “wham” package from Github by following the steps below:
-#### 1. Open your browser and go to: https://github.com/lichengxue/wham/tree/mse
-#### 2. Select the green "Code" button on the main page. 
-#### 3. Once the dropdown menu appears, select Download ZIP to download the mse package.
-#### 4. Upzip the package, you should see all content are saved in "your_path/wham-mse/wham-mse" (Note: There are two folders with exact same name!)
-#### 5. Create a new folder, rename as "wham", move all the content from your_path/wham-mse/wham-mse to this new folder for the later installation.
-
-## Install "multi-wham-mse" package
-For the users who are installing "wham" for the first time:
-```r
+  #### 1. Open "Command Prompt" in your local computer.
+  #### 2. Type "cd directory" here you can type a specific path (replace "directory") to save the package (you can also skip this step and the package will be saved in the main directory). 
+  #### 3. Type "git clone -b mse https://github.com/lichengxue/wham.git".
+  #### 4. Close the Command and check if the package has been saved in the directory.
+  
+  ## Download "multi-wham-mse" package (for non-git users)
+  You can download the “mse” branch of the “wham” package from Github by following the steps below:
+  #### 1. Open your browser and go to: https://github.com/lichengxue/wham/tree/mse
+  #### 2. Select the green "Code" button on the main page. 
+  #### 3. Once the dropdown menu appears, select Download ZIP to download the mse package.
+  #### 4. Upzip the package, you should see all content are saved in "your_path/wham-mse/wham-mse" (Note: There are two folders with exact same name!)
+  #### 5. Create a new folder, rename as "wham", move all the content from your_path/wham-mse/wham-mse to this new folder for the later installation.
+  
+  ## Install "multi-wham-mse" package
+  For the users who are installing "wham" for the first time:
+  ```r
 install.packages(file.path(library/you/download/package,"wham"), dependencies = TRUE, repos = NULL, type = "source")
 # devtools::install_local(file.path(main.dir,"wham"), dependencies = TRUE) # Alternative
 # Remember load the "mse" package using:
@@ -129,13 +129,13 @@ Rec_sig      <- 0.2 # (sigma for recruitment)
 NAA_sig      <- 0.2 # (sigma for NAA)
 
 # Set initial NAA for each stock
-log_N1 = rep(10,n_stocks)
-log_N1[1] = log(exp(10)*2) # Create difference between stocks
-N1_pars <- generate_ini_N1(log_N1,basic_info,ini.opt)
+log_N1    <- rep(10,n_stocks)
+log_N1[1] <- log(exp(10)*2) # Create difference between stocks
+N1_pars   <- generate_ini_N1(log_N1,basic_info,ini.opt)
 
 # Set mean recruitment para. for each stock
 mean_rec_par <- list()
-for (i in 1:n_stocks) mean_rec_par[[i]] = exp(log_N1[i])
+for (i in 1:n_stocks) mean_rec_par[[i]] <- exp(log_N1[i])
 
 NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
                sigma=rep(sigma,n_stocks),
@@ -193,11 +193,11 @@ data <- generate_data(om, seed = 123)
 ### 9. Specify assessment interval and assessment year in the feedback loop
 Users can specify the assessment interval for the feedback period. For medium-lived groundfish stock, an assessment interval of 3 years is typically common in the northeast region. It should be noted that the shorter assessment interval, the longer runtime it may take for the whole feedback period.
 ```r
-assess.interval = 3 # Assessment interval
-base.years      = year_start:year_end # Burn-in period
-first.year      = head(base.years,1)
-terminal.year   = tail(base.years,1)
-assess.years    = seq(terminal.year, tail(om$years,1)-assess.interval,by = assess.interval)
+assess.interval <- 3 # Assessment interval
+base.years      <- year_start:year_end # Burn-in period
+first.year      <- head(base.years,1)
+terminal.year   <- tail(base.years,1)
+assess.years    <- seq(terminal.year, tail(om$years,1)-assess.interval,by = assess.interval)
 ````
 Create a list to save the MSE results
 ```r
@@ -209,17 +209,17 @@ The code below does a closed-loop simulation with operating model, fitting an es
 The table shown below describes the options of assessment model in the mse package
 
 | Model           |                    Type                 |  Number of models  |    Movement    | Random effects  |    Reference point  |                         Description                             |  
-|:----------------|:----------------------------------------|:-------------------|:---------------|:----------------|:--------------------|:----------------------------------------------------------------|
-| EM1             |  Panmictic                              | Number of regions  | No             | NAA             | No global SPR-based |Separate/independent single stock assessment model               |
-| EM2             |  Spatially implicit (fleets-as-areas)   | One                | No             | NAA             | No global SPR-based |Multiple fleets account for spatial difference in fleet structure|
-| EM3             |  Panmictic (catch aggregated)           | One                | No             | NAA             | No global SPR-based |Fleet aggregated across regions                                  |
-| EM4             |  Spatially explicit                     | Number of regions  | Yes (fixed)    | NAA             | Global SPR-based    |Movement rate is fixed as known                                  |
-| EM5             |  Spatially explicit                     | Number of regions  | No             | NAA             | Global SPR-based    |Movement is not included                                         |
-| EM6             |  Spatially explicit                     | Number of regions  | No             | Rec             | Global SPR-based    |Movement is not included                                         |
-| EM7             |  Spatially explicit                     | Number of regions  | Yes (estimated)| NAA             | Global SPR-based    |Movement rate is estimated with a prior and standard deviation   |
-
-### EM1: Separate panmictic assessment models with NAA random effects
-Fit separate assessment models for each stock like traditional single-stock assessment
+  |:----------------|:----------------------------------------|:-------------------|:---------------|:----------------|:--------------------|:----------------------------------------------------------------|
+  | EM1             |  Panmictic                              | Number of regions  | No             | NAA             | No global SPR-based |Separate/independent single stock assessment model               |
+  | EM2             |  Spatially implicit (fleets-as-areas)   | One                | No             | NAA             | No global SPR-based |Multiple fleets account for spatial difference in fleet structure|
+  | EM3             |  Panmictic (catch aggregated)           | One                | No             | NAA             | No global SPR-based |Fleet aggregated across regions                                  |
+  | EM4             |  Spatially explicit                     | Number of regions  | Yes (fixed)    | NAA             | Global SPR-based    |Movement rate is fixed as known                                  |
+  | EM5             |  Spatially explicit                     | Number of regions  | No             | NAA             | Global SPR-based    |Movement is not included                                         |
+  | EM6             |  Spatially explicit                     | Number of regions  | No             | Rec             | Global SPR-based    |Movement is not included                                         |
+  | EM7             |  Spatially explicit                     | Number of regions  | Yes (estimated)| NAA             | Global SPR-based    |Movement rate is estimated with a prior and standard deviation   |
+  
+  ### EM1: Separate panmictic assessment models with NAA random effects
+  Fit separate assessment models for each stock like traditional single-stock assessment
 ![EM1](https://github.com/lichengxue/wham/blob/mse/mse_vignettes/Vignettes_figs/EM1.png)
 ```r
 n_stocks = n_regions = n_fleets = n_indices = 1

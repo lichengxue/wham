@@ -2,22 +2,22 @@
 The “multi-wham-mse” package is used to perform management strategy evaluation (MSE) in the situation where population structure is complex (e.g. multiple stocks in multiple regions) with different movement dynamics (e.g. natal homing). This package is designed specifically for the Woods Hole Assessment Model (WHAM), a state-space age-structured stock assessment model. So far, WHAM can incorporate multiple sources of process errors (treated as random effects) such as deviations in (1) recruitment/numbers-at-age, (2) selectivity, (3) natural mortality, (4) catchability, and (5) movement. WHAM is also capable of including environmental effects on population processes. 
 ## Download "multi-wham-mse" package (for git users)
 You can download the “mse” branch of the “wham” package from Github by following the steps below:
-#### 1. Open "Command Prompt" in your local computer.
-#### 2. Type "cd directory" here you can type a specific path (replace "directory") to save the package (you can also skip this step and the package will be saved in the main directory). 
-#### 3. Type "git clone -b mse https://github.com/lichengxue/wham.git".
-#### 4. Close the Command and check if the package has been saved in the directory.
-
-## Download "multi-wham-mse" package (for non-git users)
-You can download the “mse” branch of the “wham” package from Github by following the steps below:
-#### 1. Open your browser and go to: https://github.com/lichengxue/wham/tree/mse
-#### 2. Select the green "Code" button on the main page. 
-#### 3. Once the dropdown menu appears, select Download ZIP to download the mse package.
-#### 4. Upzip the package, you should see all content are saved in "your_path/wham-mse/wham-mse" (Note: There are two folders with exact same name!)
-#### 5. Create a new folder, rename as "wham", move all the content from your_path/wham-mse/wham-mse to this new folder for the later installation.
-
-## Install "multi-wham-mse" package
-For the users who are installing "wham" for the first time:
-```r
+  #### 1. Open "Command Prompt" in your local computer.
+  #### 2. Type "cd directory" here you can type a specific path (replace "directory") to save the package (you can also skip this step and the package will be saved in the main directory). 
+  #### 3. Type "git clone -b mse https://github.com/lichengxue/wham.git".
+  #### 4. Close the Command and check if the package has been saved in the directory.
+  
+  ## Download "multi-wham-mse" package (for non-git users)
+  You can download the “mse” branch of the “wham” package from Github by following the steps below:
+  #### 1. Open your browser and go to: https://github.com/lichengxue/wham/tree/mse
+  #### 2. Select the green "Code" button on the main page. 
+  #### 3. Once the dropdown menu appears, select Download ZIP to download the mse package.
+  #### 4. Upzip the package, you should see all content are saved in "your_path/wham-mse/wham-mse" (Note: There are two folders with exact same name!)
+  #### 5. Create a new folder, rename as "wham", move all the content from your_path/wham-mse/wham-mse to this new folder for the later installation.
+  
+  ## Install "multi-wham-mse" package
+  For the users who are installing "wham" for the first time:
+  ```r
 install.packages(file.path(library/you/download/package,"wham"), dependencies = TRUE, repos = NULL, type = "source")
 # devtools::install_local(file.path(main.dir,"wham"), dependencies = TRUE) # Alternative
 # Remember load the "mse" package using:
@@ -48,8 +48,8 @@ library(wham)
 ### 1. Load package and create a folder
 ```r
 library(wham)
-# main.dir = here::here()
-main.dir = "where/you/save/your/wham/package"
+main.dir = here::here()
+# main.dir = "where/you/save/your/wham/package"
 
 folder.name = "Example_1"
 sub.dir <- folder.name
@@ -141,16 +141,16 @@ M <- list(model="constant") # Default is M = 0.2
 sigma        <- "rec+1"
 re_cor       <- "iid"
 ini.opt      <- "equilibrium" # option   <- c("age-specific-fe", "equilibrium")
-Rec_sig    <- 0.2 # (sigma for recruitment)
-NAA_sig    <- 0.2 # (sigma for NAA)
+Rec_sig      <- 0.2 # (sigma for recruitment)
+NAA_sig      <- 0.2 # (sigma for NAA)
 
 # Set initial NAA for each stock
-log_N1 = c(log(exp(10)*2), 10) # Create difference between stocks
+log_N1  <- c(log(exp(10)*2), 10) # Create difference between stocks
 N1_pars <- generate_ini_N1(log_N1,basic_info,ini.opt)
 
 # Set mean recruitment para. for each stock
 mean_rec_par <- list()
-for (i in 1:n_stocks) mean_rec_par[[i]] = exp(log_N1[i])
+for (i in 1:n_stocks) mean_rec_par[[i]] <- exp(log_N1[i])
 
 NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
                sigma=rep(sigma,n_stocks),
@@ -167,7 +167,7 @@ input <- prepare_wham_input(basic_info = basic_info, selectivity = sel, M = M, N
 
 ### 6. Generate the operating model
 ```r
-om = fit_wham(input, do.fit = F, do.brps = F, MakeADFun.silent = TRUE)
+om <- fit_wham(input, do.fit = F, do.brps = F, MakeADFun.silent = TRUE)
 # Note: do.fit must be FALSE (no modeling fitting yet)
 ````
 ### 7. Self test 
@@ -175,7 +175,7 @@ om = fit_wham(input, do.fit = F, do.brps = F, MakeADFun.silent = TRUE)
 # Create a function to generate data and do self fitting
 sim_fn <- function(om, self.fit = FALSE){
   input <- om$input
-  input$data = om$simulate(complete=TRUE)
+  input$data <- om$simulate(complete=TRUE)
   if(self.fit) {
     fit <- fit_wham(input, do.osa = FALSE, do.retro = FALSE, MakeADFun.silent = FALSE)
     return(fit)
@@ -214,11 +214,11 @@ NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
 # Generate wham input
 input <- prepare_wham_input(basic_info = basic_info, selectivity = sel, M = M, NAA_re = NAA_re, move = move)
 # Generate EM
-em = fit_wham(input, do.fit = F, do.brps = F, MakeADFun.silent = TRUE)
+em <- fit_wham(input, do.fit = F, do.brps = F, MakeADFun.silent = TRUE)
 # Create a function to generate data and do cross fitting
 sim_fn2 <- function(om, em, cross.fit = FALSE){
   input <- em$input
-  input$data = om$simulate(complete=TRUE)
+  input$data <- om$simulate(complete=TRUE)
   if(cross.fit) {
     fit <- fit_wham(input, do.osa = FALSE, do.retro = FALSE, MakeADFun.silent = FALSE)
     return(fit)
@@ -236,27 +236,27 @@ plot_wham_output(cross_sim_fit, out.type = "html")
 ### 12. Generate replicates for self test (optional)
 Parameters (including random effects parameters) associated with population dynamics are now defined in the operating model. Users can generate pseudo observational data from the operating model with process and observation errors randomly drawn from their corresponding likelihood distribution. Generating 100 pseudo data is common when performing a self test.
 ```r
-nsim = 100 
+nsim <- 100 
 set.seed(8675309) 
-sim_input = list()
-sim_input = lapply(1:nsim, function(x) {
-  input_i = om$input
-  sim = om$simulate(complete=TRUE)
-  input_i$data = sim
+sim_input <- list()
+sim_input <- lapply(1:nsim, function(x) {
+  input_i <- om$input
+  sim <- om$simulate(complete=TRUE)
+  input_i$data <- sim
   return(input_i)
 })
 
 # Self test
-sim_fits = list()
-sim_fits = lapply(1:nsim, function(x){
+sim_fits <- list()
+sim_fits <- lapply(1:nsim, function(x){
   cat(paste("model_fit:", x, "start \n"))
-  out = fit_wham(sim_input[[x]], do.osa = FALSE, MakeADFun.silent = TRUE, retro.silent = TRUE, save.sdrep = FALSE)
+  out <- fit_wham(sim_input[[x]], do.osa = FALSE, MakeADFun.silent = TRUE, retro.silent = TRUE, save.sdrep = FALSE)
   cat(paste("model_fit:", x, "done \n"))
   return(out)
 })
 
 # Summarize results 
-conv = sapply(1:nsim, function(x){
+conv <- sapply(1:nsim, function(x){
   if (length(sim_fits[[x]]) != 0) {
     if (sim_fits[[x]]$is_sdrep & !sim_fits[[x]]$na_sdrep & !sim_fits[[x]]$hessian) {
       conv = TRUE } else conv = FALSE
@@ -265,30 +265,30 @@ conv = sapply(1:nsim, function(x){
 })
 cat(paste("Convergence rate:", sum(conv)/nsim))
 
-mean_rec_par = lapply(1:nsim, function(x){
-  mean_rec_par_est = sim_fits[[x]]$parList$mean_rec_pars[,1]
-  mean_rec_par_true = sim_fits[[x]]$input$par$mean_rec_pars[,1]
-  mean_rec_par = cbind(mean_rec_par_est,mean_rec_par_true)
+mean_rec_par <- lapply(1:nsim, function(x){
+  mean_rec_par_est <- sim_fits[[x]]$parList$mean_rec_pars[,1]
+  mean_rec_par_true <- sim_fits[[x]]$input$par$mean_rec_pars[,1]
+  mean_rec_par <- cbind(mean_rec_par_est,mean_rec_par_true)
   return(mean_rec_par)
 })
 print(mean_rec_par)
 
-SSB = lapply(1:nsim, function(x){
-  SSB_est = sim_fits[[x]]$rep$SSB
-  SSB_true = sim_fits[[x]]$input$data$SSB
-  SSB = cbind(SSB_est, SSB_true)
+SSB <- lapply(1:nsim, function(x){
+  SSB_est <- sim_fits[[x]]$rep$SSB
+  SSB_true <- sim_fits[[x]]$input$data$SSB
+  SSB <- cbind(SSB_est, SSB_true)
   return(SSB)
 })
 print(SSB)
 ````
 
 ### 13. Generate replicates for cross test (optional)
-nsim = 100
+nsim <- 100
 set.seed(8675309) 
-sim_input = list()
-sim_input = lapply(1:nsim, function(x) {
-  input_i = em$input
-  sim = om$simulate(complete=TRUE)
-  input_i$data = sim
+sim_input <- list()
+sim_input <- lapply(1:nsim, function(x) {
+  input_i <- em$input
+  sim <- om$simulate(complete=TRUE)
+  input_i$data <- sim
   return(input_i)
 })

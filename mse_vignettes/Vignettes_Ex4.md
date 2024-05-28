@@ -120,7 +120,7 @@ NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
 ### 6. Generate wham input and operating model
 ```r
 input <- prepare_wham_input(basic_info = basic_info, selectivity = sel, M = M, NAA_re = NAA_re, move = move)
-om = fit_wham(input, do.fit = F, do.brps = T, MakeADFun.silent = TRUE)
+om <- fit_wham(input, do.fit = F, do.brps = T, MakeADFun.silent = TRUE)
 saveRDS(om,"om.RDS") # save the OM 
 ````
 
@@ -128,7 +128,7 @@ saveRDS(om,"om.RDS") # save the OM
 ```r
 sim_fn <- function(om, self.fit = FALSE){
   input <- om$input
-  input$data = om$simulate(complete=TRUE)
+  input$data <- om$simulate(complete=TRUE)
   if(self.fit) {
     # input <- fix_move(input)
     fit <- fit_wham(input, do.osa = FALSE, do.retro = FALSE, MakeADFun.silent = FALSE)
@@ -146,11 +146,11 @@ data <- generate_data(om, seed = 123)
 ### 9. Specify assessment interval and assessment year in the feedback loop
 Users can specify the assessment interval for the feedback period. For medium-lived groundfish stock, an assessment interval of 3 years is typically common in the northeast region. It should be noted that the shorter assessment interval, the longer runtime it may take for the whole feedback period.
 ```r
-assess.interval = 3 # Assessment interval
-base.years      = year_start:year_end # Burn-in period
-first.year      = head(base.years,1)
-terminal.year   = tail(base.years,1)
-assess.years    = seq(terminal.year, tail(om$years,1)-assess.interval,by = assess.interval)
+assess.interval <- 3 # Assessment interval
+base.years      <- year_start:year_end # Burn-in period
+first.year      <- head(base.years,1)
+terminal.year   <- tail(base.years,1)
+assess.years    <- seq(terminal.year, tail(om$years,1)-assess.interval,by = assess.interval)
 ````
 ### 10. EM: Separate panmictic assessment models with NAA random effects
 Fit separate assessment models for each stock like traditional single-stock assessment

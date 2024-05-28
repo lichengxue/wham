@@ -77,7 +77,6 @@ sel <- list(model=rep("logistic",n_fleets+n_indices),
             fix_pars=rep(list(NULL),n_fleets+n_indices))
 
 # M Configuration
-# M <- list(model="constant") # Default is M = 0.2
 M <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
 ````
 
@@ -95,14 +94,14 @@ N1_pars <- generate_ini_N1(log_N1,basic_info,ini.opt)
 
 # Set mean recruitment para. for each stock
 mean_rec_par <- list()
-for (i in 1:n_stocks) mean_rec_par[[i]] = exp(log_N1[i])
+for (i in 1:n_stocks) mean_rec_par[[i]] <- exp(log_N1[i])
 
 NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
                sigma=rep(sigma,n_stocks),
                cor=rep(re_cor,n_stocks),
-               recruit_model = 3,
-               recruit_pars = rep(list(c(alpha,beta)),n_stocks), # assume same B-H s-r functions for all stocks
-               sigma_vals = rep(list(c(Rec_sig,rep(NAA_sig,n_ages-1))),n_stocks),
+               recruit_model = 2,  # rec random around the mean
+               recruit_pars = mean_rec_par, 
+               sigma_vals = rep(list(c(Rec_sig,rep(NAA_sig,n_ages-1))),n_stocks),  # two sigmas when "rec+1"
                N1_pars = N1_pars)
 
 # recruit_model = 1: estimating annual recruitments as fixed effects or a random walk if NAA_re$sigma specified
@@ -127,7 +126,7 @@ input <- prepare_wham_input(basic_info = basic_info,
                             move = move,
                             age_comp = "logistic-normal-miss0")
 
-om = fit_wham(input, do.fit = F, do.brps = T, MakeADFun.silent = TRUE)
+om <- fit_wham(input, do.fit = F, do.brps = T, MakeADFun.silent = TRUE)
 
 saveRDS(om,"om.RDS") # save the OM 
 ````
@@ -136,7 +135,7 @@ saveRDS(om,"om.RDS") # save the OM
 ```r
 sim_fn <- function(om, self.fit = FALSE){
   input <- om$input
-  input$data = om$simulate(complete=TRUE)
+  input$data <- om$simulate(complete=TRUE)
   if(self.fit) {
     fit <- fit_wham(input, do.osa = FALSE, do.retro = FALSE, MakeADFun.silent = FALSE)
     return(fit)
@@ -153,11 +152,11 @@ data <- generate_data(om, seed = 123)
 ### 9. Specify assessment interval and assessment year in the feedback loop
 Users can specify the assessment interval for the feedback period. For medium-lived groundfish stock, an assessment interval of 3 years is typically common in the northeast region. It should be noted that the shorter assessment interval, the longer runtime it may take for the whole feedback period.
 ```r
-assess.interval = 3 # Assessment interval
-base.years      = year_start:year_end # Burn-in period
-first.year      = head(base.years,1)
-terminal.year   = tail(base.years,1)
-assess.years    = seq(terminal.year, tail(om$years,1)-assess.interval,by = assess.interval)
+assess.interval <- 3 # Assessment interval
+base.years      <- year_start:year_end # Burn-in period
+first.year      <- head(base.years,1)
+terminal.year   <- tail(base.years,1)
+assess.years    <- seq(terminal.year, tail(om$years,1)-assess.interval,by = assess.interval)
 ````
 ### 10. EM: Separate panmictic assessment models with NAA random effects
 Fit separate assessment models for each stock like traditional single-stock assessment

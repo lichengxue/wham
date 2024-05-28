@@ -84,8 +84,8 @@ M <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n
 sigma        <- "rec+1"
 re_cor       <- "iid"
 ini.opt      <- "equilibrium" # option   <- c("age-specific-fe", "equilibrium")
-Rec_sig    <- 0.2 # (sigma for recruitment)
-NAA_sig    <- 0.2 # (sigma for NAA)
+Rec_sig      <- 0.2 # (sigma for recruitment)
+NAA_sig      <- 0.2 # (sigma for NAA)
 
 # Set initial NAA for each stock
 log_N1 = c(log(exp(10)*2), 10) # Create difference between stocks

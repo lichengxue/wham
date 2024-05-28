@@ -130,11 +130,11 @@ data <- generate_data(om, seed = 123)
 ### 8. Specify assessment interval and assessment year in the feedback loop
 Users can specify the assessment interval for the feedback period. For medium-lived groundfish stock, an assessment interval of 3 years is typically common in the northeast region. It should be noted that the shorter assessment interval, the longer runtime it may take for the whole feedback period.
 ```r
-assess.interval = 3 # Assessment interval
-base.years      = year_start:year_end # Burn-in period
-first.year      = head(base.years,1)
-terminal.year   = tail(base.years,1)
-assess.years    = seq(terminal.year, tail(om$years,1)-assess.interval,by = assess.interval)
+assess.interval <- 3 # Assessment interval
+base.years      <- year_start:year_end # Burn-in period
+first.year      <- head(base.years,1)
+terminal.year   <- tail(base.years,1)
+assess.years    <- seq(terminal.year, tail(om$years,1)-assess.interval,by = assess.interval)
 ````
 ### 10. EM: Separate panmictic assessment models with NAA random effects
 Fit separate assessment models for each stock like traditional single-stock assessment
@@ -153,8 +153,8 @@ NAA_re_em <- list(N1_model=rep(ini.opt,n_stocks),
 M_em <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
 
 # Change to Hockey-stick Harvest Control Rule!
-hcr_type = 3
-hcr_opts = list(max_percent = 75, min_percent = 0.01, BThresh_up = 0.5, BThresh_low = 0) # use ?loop_through_fn for more details
+hcr_type <- 3
+hcr_opts <- list(max_percent = 75, min_percent = 0.01, BThresh_up = 0.5, BThresh_low = 0) # use ?loop_through_fn for more details
 
 mod = loop_through_fn(om = data, 
                       M_om = M,
