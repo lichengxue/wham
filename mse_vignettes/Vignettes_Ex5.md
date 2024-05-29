@@ -2,8 +2,8 @@
 
 ### 1. Create a folder to save your results
 ```r
-# main.dir = here::here()
-main.dir = "where/you/save/your/wham/package"
+main.dir = here::here()
+# main.dir = "where/you/save/your/wham/package"
 
 # install.packages(file.path(main.dir,"wham"), dependencies = TRUE, repos = NULL, type = "source")
 # devtools::install_local(file.path(main.dir,"wham"), dependencies = TRUE)
@@ -135,12 +135,12 @@ om = fit_wham(input, do.fit = F, do.brps = T, MakeADFun.silent = TRUE)
 saveRDS(om,"om.RDS") # save the OM 
 ````
 
-### 7. Generate datasets
+### 9. Generate datasets
 ```r
 data <- generate_data(om, seed = 123)
 ````
 
-### 8. Specify assessment interval and assessment year in the feedback loop
+### 10. Specify assessment interval and assessment year in the feedback loop
 Users can specify the assessment interval for the feedback period. For medium-lived groundfish stock, an assessment interval of 3 years is typically common in the northeast region. It should be noted that the shorter assessment interval, the longer runtime it may take for the whole feedback period.
 ```r
 assess.interval <- 3 # Assessment interval
@@ -149,7 +149,7 @@ first.year      <- head(base.years,1)
 terminal.year   <- tail(base.years,1)
 assess.years    <- seq(terminal.year, tail(om$years,1)-assess.interval,by = assess.interval)
 ````
-### 10. EM: Separate panmictic assessment models with NAA random effects
+### 11. EM: Separate panmictic assessment models with NAA random effects
 Fit separate assessment models for each stock like traditional single-stock assessment
 ![EM1](https://github.com/lichengxue/wham/blob/mse/mse_vignettes/Vignettes_figs/EM1.png)
 ```r

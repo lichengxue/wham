@@ -8,7 +8,10 @@ generate_move(
   basic_info = basic_info,
   move.type = 2,
   move.rate = 0.3,
-  move.re = "constant"
+  move.re = "constant",
+  move.sigma = NULL,
+  move.rho_a = NULL,
+  move.rho_y = NULL
 )
 }
 \arguments{
@@ -32,6 +35,12 @@ Note: NAA_where has to be specified in basic_info using \code{\link{generate_NAA
   \item \code{"ar1_y"} movement rate deviations correlated by year (AR1).
   \item \code{"ar1_a"} movement rate deviations correlated by age (AR1).
   }}
+
+\item{move.sigma}{Sigma for movement random effects}
+
+\item{move.rho_a}{Correlation for movement random effects by ages, only used if move.re = ar1_a (default = 0.5)}
+
+\item{move.rho_y}{Correlation for movement random effects by years, only used if move.re = ar1_y (default = 0.5)}
 }
 \value{
 a named list with the following components:

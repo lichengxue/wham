@@ -1,20 +1,19 @@
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
-# -------------------- Examples of self and cross test ------------------------
+# ------------------ Movement treated as random effects -----------------------
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 
-# main.dir = "where/you/save/your/wham/package"
 main.dir = here::here()
+# main.dir = "where/you/save/your/wham/package"
 
 # install.packages(file.path(main.dir,"wham"), dependencies = TRUE, repos = NULL, type = "source")
 # devtools::install_local(file.path(main.dir,"wham"), dependencies = TRUE)
 
 library(wham)
-# roxygen2::roxygenize("wham")
 
 # Create a folder to save your results
-folder.name = "Example_1"
+folder.name = "Example_6"
 sub.dir <- folder.name
 if (file.exists(sub.dir)){
 } else {
@@ -59,8 +58,7 @@ basic_info <- generate_NAA_where(basic_info = basic_info, move.type = 2)
 
 # Configure movement random effects
 # Note: default is move = 0.3 (constant) for stock1 and 0.1 (constant) for the other stocks
-move <- generate_move(basic_info = basic_info, move.type = 2, move.rate = 0.3, move.re = "constant")
-# move <- generate_move(basic_info = basic_info, move.type = 2, move.rate = 0.3, move.re = "ar1_a")
+move <- generate_move(basic_info = basic_info, move.type = 2, move.rate = 0.3, move.re = "iid_y", move.sigma = 0.2)
 
 n_stocks  <- as.integer(basic_info['n_stocks'])
 n_regions <- as.integer(basic_info['n_regions'])
@@ -88,7 +86,7 @@ Rec_sig      <- 0.2 # (sigma for recruitment)
 NAA_sig      <- 0.2 # (sigma for NAA)
 
 # Set initial NAA for each stock
-log_N1  <- c(log(exp(10)*2), 10) # Create difference between stocks
+log_N1 = c(log(exp(10)*2), 10) # Create difference between stocks
 N1_pars <- generate_ini_N1(log_N1,basic_info,ini.opt)
 
 # Set mean recruitment para. for each stock
@@ -105,7 +103,7 @@ NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
 
 input <- prepare_wham_input(basic_info = basic_info, selectivity = sel, M = M, NAA_re = NAA_re, move = move)
 
-om <- fit_wham(input, do.fit = F, do.brps = F, MakeADFun.silent = TRUE)
+om = fit_wham(input, do.fit = F, do.brps = F, MakeADFun.silent = TRUE)
 
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
@@ -117,6 +115,7 @@ sim_fn <- function(om, self.fit = FALSE){
   input <- om$input
   input$data = om$simulate(complete=TRUE)
   if(self.fit) {
+    input <- fix_move(input) # fixed movement rate and sigma
     fit <- fit_wham(input, do.osa = FALSE, do.retro = FALSE, MakeADFun.silent = FALSE)
     return(fit)
   } else return(input) 
@@ -137,109 +136,3 @@ if (file.exists(report.dir)){
   dir.create(file.path(main.dir, sub.dir, report.dir))
 }
 plot_wham_output(self_sim_fit, dir.main = file.path(main.dir, sub.dir, report.dir),out.type = 'png')
-
-# -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------
-# ---------------------------------- Cross test --------------------------------
-# -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------
-
-# EM with different NAA configuration
-sigma      <- "rec+1" # Before "rec+1"
-re_cor     <- "2dar1"
-# option   <- c("age-specific-fe", "equilibrium","iid-re", "ar1-re")
-ini.opt    <- "equilibrium"
-NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
-               sigma=rep(sigma,n_stocks),
-               cor=rep(re_cor,n_stocks))
-
-input <- prepare_wham_input(basic_info = basic_info, selectivity = sel, M = M, NAA_re = NAA_re, move = move)
-em = fit_wham(input, do.fit = F, do.brps = F, MakeADFun.silent = TRUE)
-
-sim_fn2 <- function(om, em, cross.fit = FALSE){
-  input <- em$input
-  input$data = om$simulate(complete=TRUE)
-  if(cross.fit) {
-    fit <- fit_wham(input, do.osa = FALSE, do.retro = FALSE, MakeADFun.silent = FALSE)
-    return(fit)
-  } else return(input) 
-}
-set.seed(12345)
-cross_sim_fit <- sim_fn2(om, em, cross.fit = TRUE)
-
-# Check model convergence
-check_convergence(cross_sim_fit)
-
-# Create HTML file to view output plots in browser
-plot_wham_output(cross_sim_fit, out.type = "html")
-
-
-# -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------
-# ----------------------- Generate replicates for self test -------------------
-# -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------
-
-nsim = 100
-set.seed(8675309) 
-sim_input = list()
-sim_input = lapply(1:nsim, function(x) {
-  input_i = om$input
-  sim = om$simulate(complete=TRUE)
-  input_i$data = sim
-  return(input_i)
-})
-
-# Self test
-sim_fits = list()
-sim_fits = lapply(1:nsim, function(x){
-  cat(paste("model_fit:", x, "start \n"))
-  out = fit_wham(sim_input[[x]], do.osa = FALSE, MakeADFun.silent = TRUE, retro.silent = TRUE, save.sdrep = FALSE)
-  cat(paste("model_fit:", x, "done \n"))
-  return(out)
-})
-
-# Summarize results 
-conv = sapply(1:nsim, function(x){
-  if (length(sim_fits[[x]]) != 0) {
-    if (sim_fits[[x]]$is_sdrep & !sim_fits[[x]]$na_sdrep & !sim_fits[[x]]$hessian) {
-      conv = TRUE } else conv = FALSE
-  } else conv = FALSE
-  return(conv)
-})
-cat(paste("Convergence rate:", sum(conv)/nsim))
-
-mean_rec_par = lapply(1:nsim, function(x){
-  mean_rec_par_est = sim_fits[[x]]$parList$mean_rec_pars[,1]
-  mean_rec_par_true = sim_fits[[x]]$input$par$mean_rec_pars[,1]
-  mean_rec_par = cbind(mean_rec_par_est,mean_rec_par_true)
-  return(mean_rec_par)
-})
-print(mean_rec_par)
-
-SSB = lapply(1:nsim, function(x){
-  SSB_est = sim_fits[[x]]$rep$SSB
-  SSB_true = sim_fits[[x]]$input$data$SSB
-  SSB = cbind(SSB_est, SSB_true)
-  return(SSB)
-})
-print(SSB)
-
-# -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------
-# ---------------------- Generate replicates for cross test -------------------
-# -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------
-
-nsim = 100
-set.seed(8675309) 
-sim_input = list()
-sim_input = lapply(1:nsim, function(x) {
-  input_i = em$input
-  sim = om$simulate(complete=TRUE)
-  input_i$data = sim
-  return(input_i)
-})
-
-
-
