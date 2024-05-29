@@ -442,7 +442,7 @@ plot_mse_output(m, main.dir = main.dir) # plots should now be saved in main.dir
 #### More Figures are produced by the plot_mse_output() function, check ?plot_mse_output() for more details.
 
 ### Check individual assessment model
-
+```r
 # check 2 separate assessement model (em1 and em2) from EM1
 em1 <- mods[[1]]$em_full[[1]][[1]] # here mods[[1]] means 1st realization, em_full[[1]][[2]] means 1st assessment model from 1st stok assessment in the feedback loop 
 check_convergence(em1)
@@ -451,3 +451,4 @@ plot_wham_output(em1, out.type = "html")
 em2 <- mods[[1]]$em_full[[1]][[2]] # here mods[[1]] means 1st realization, em_full[[1]][[2]] means 2nd assessment model from 1st stok assessment in the feedback loop 
 check_convergence(em2)
 plot_wham_output(em1, out.type = "html")
+````

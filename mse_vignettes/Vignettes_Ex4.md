@@ -213,5 +213,5 @@ plot_wham_output(em1, out.type = "html")
 
 em2 <- mod$em_full[[1]][[2]]
 check_convergence(em2)
-plot_wham_output(em1, out.type = "html")
+plot_wham_output(em2, out.type = "html")
 ````

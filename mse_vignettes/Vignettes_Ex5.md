@@ -164,8 +164,9 @@ NAA_re_em <- list(N1_model=rep(ini.opt,n_stocks),
                recruit_pars = rep(list(c(alpha,beta)),n_stocks),
                sigma_vals = rep(list(c(Rec_sig,rep(NAA_sig,n_ages-1))),n_stocks))
 M_em <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
-
-# Change to Hockey-stick Harvest Control Rule!
+````
+### 12. Change to Hockey-stick Harvest Control Rule!
+```r
 hcr_type <- 3
 hcr_opts <- list(max_percent = 75, min_percent = 0.01, BThresh_up = 0.5, BThresh_low = 0) # use ?loop_through_fn for more details
 
@@ -203,5 +204,5 @@ plot_wham_output(em1, out.type = "html")
 
 em2 <- mod$em_full[[1]][[2]]
 check_convergence(em2)
-plot_wham_output(em1, out.type = "html")
+plot_wham_output(em2, out.type = "html")
 ````
