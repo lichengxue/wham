@@ -189,4 +189,19 @@ mod = loop_through_fn(om = data,
                       seed = 123,
                       save.sdrep = TRUE)
 saveRDS(mod,"mod.RDS") # save the result
+
+# plot SSB time series for stock 1
+plot(mod$om$rep$SSB[,1], type = "o")
+
+# plot pred catch time series for region 1
+plot(mod$om$rep$pred_catch[,1], type = "o")
+
+# check em1 and em2
+em1 <- mod$em_full[[1]][[1]]
+check_convergence(em1)
+plot_wham_output(em1, out.type = "html")
+
+em2 <- mod$em_full[[1]][[2]]
+check_convergence(em2)
+plot_wham_output(em1, out.type = "html")
 ````

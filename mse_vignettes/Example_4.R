@@ -156,7 +156,6 @@ base.years      = year_start:year_end # Burn-in period
 first.year      = head(base.years,1)
 terminal.year   = tail(base.years,1)
 assess.years    = seq(terminal.year, tail(om$years,1)-assess.interval,by = assess.interval)
-mods <- list()
 
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
@@ -171,20 +170,37 @@ sel_em <- list(model=rep("logistic",n_fleets+n_indices),
 NAA_re_em <- list(N1_model="equilibrium",sigma="rec+1",cor="iid",recruit_model = 3)
 M_em <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
 
-mods[[1]] = loop_through_fn(om = data, 
-                            M_om = M,
-                            sel_om = sel, 
-                            NAA_re_om = NAA_re, 
-                            mean_rec_weights = c(2/3,1/3),
-                            move_om = move,
-                            M_em = M_em, 
-                            sel_em = sel_em, 
-                            NAA_re_em = NAA_re_em, 
-                            move_em = NULL,
-                            em.opt = list(separate.em = TRUE, separate.em.type = 1, do.move = FALSE, est.move = FALSE),
-                            assess_years = assess.years, 
-                            assess_interval = assess.interval, 
-                            base_years = base.years,
-                            year.use = 20, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
-                            seed = 123,
-                            save.sdrep = TRUE)
+mod = loop_through_fn(om = data, 
+                      M_om = M,
+                      sel_om = sel, 
+                      NAA_re_om = NAA_re, 
+                      mean_rec_weights = c(2/3,1/3),
+                      move_om = move,
+                      M_em = M_em, 
+                      sel_em = sel_em, 
+                      NAA_re_em = NAA_re_em, 
+                      move_em = NULL,
+                      em.opt = list(separate.em = TRUE, separate.em.type = 1, do.move = FALSE, est.move = FALSE),
+                      assess_years = assess.years, 
+                      assess_interval = assess.interval, 
+                      base_years = base.years,
+                      year.use = 20, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
+                      seed = 123,
+                      save.sdrep = TRUE)
+
+saveRDS(mod,"mod.RDS") # save the result
+
+# plot SSB time series for stock 1
+plot(mod$om$rep$SSB[,1], type = "o")
+
+# plot pred catch time series for region 1
+plot(mod$om$rep$pred_catch[,1], type = "o")
+
+# check em1 and em2
+em1 <- mod$em_full[[1]][[1]]
+check_convergence(em1)
+plot_wham_output(em1, out.type = "html")
+
+em2 <- mod$em_full[[1]][[2]]
+check_convergence(em2)
+plot_wham_output(em1, out.type = "html")
