@@ -6,7 +6,7 @@ library(wham)
 main.dir = here::here()
 # main.dir = "where/you/save/your/wham/package"
 
-folder.name = "Example_1"
+folder.name = "Example_6"
 sub.dir <- folder.name
 if (file.exists(sub.dir)){
 } else {
@@ -110,13 +110,14 @@ om <- fit_wham(input, do.fit = F, do.brps = F, MakeADFun.silent = TRUE)
 # Note: do.fit must be FALSE (no modeling fitting yet)
 ````
 ### 7. Self test 
+This is highly recommended to fix the movement rate and the variance parameters associated with movement
 ```r
 # Create a function to generate data and do self fitting
 sim_fn <- function(om, self.fit = FALSE){
   input <- om$input
   input$data <- om$simulate(complete=TRUE)
   if(self.fit) {
-    input <- fix_move(input)
+    input <- fix_move(input) # fixed movement rate and sigma
     fit <- fit_wham(input, do.osa = FALSE, do.retro = FALSE, MakeADFun.silent = FALSE)
     return(fit)
   } else return(input) 
