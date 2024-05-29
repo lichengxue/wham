@@ -283,6 +283,7 @@ print(SSB)
 ````
 
 ### 13. Generate replicates for cross test (optional)
+```r
 nsim <- 100
 set.seed(8675309) 
 sim_input <- list()
@@ -292,3 +293,4 @@ sim_input <- lapply(1:nsim, function(x) {
   input_i$data <- sim
   return(input_i)
 })
+````
