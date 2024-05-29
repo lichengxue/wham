@@ -15,7 +15,7 @@ library(wham)
 # Create a folder to save your results
 folder.name = "Example_2"
 sub.dir <- folder.name
-if (file.exists(sub.dir)){
+if (file.exists(file.path(main.dir,sub.dir))){
   setwd(file.path(main.dir,sub.dir))
 } else {
   dir.create(file.path(main.dir,sub.dir))

@@ -11,7 +11,7 @@ main.dir = here::here()
 library(wham)
 folder.name = "Example_3"
 sub.dir <- folder.name
-if (file.exists(sub.dir)){
+if (file.exists(file.path(main.dir,sub.dir))){
   setwd(file.path(main.dir,sub.dir))
 } else {
   dir.create(file.path(main.dir,sub.dir))
