@@ -129,14 +129,17 @@ loop_through_fn = function(om,
       move.type = 3
     }
   }
-  
   if (is.null(em.opt)) warning("em.opt has to be specified!")
+  if (!is.null(move_em) & em.opt$separate.em) warnings("move_em must be NULL if em.opt$separate.em = TRUE!")
   if (em.opt$separate.em) move_em = NULL
   
-  em_list <- list()
-  sdrep_list <- list()
-  opt_list <- list()
-  converge_list <- list()
+  em_list    <- list()
+  par.est    <- list()
+  par.se     <- list()
+  adrep.est  <- list()
+  adrep.se   <- list()
+  opt_list   <- list()
+  converge_list  <- list()
   
   if(save.sdrep) em_full <- list()
   
@@ -148,9 +151,12 @@ loop_through_fn = function(om,
         
         i <- which(assess_years == y)
         
-        em_list[[i]] <- list()
-        sdrep_list[[i]] <- list()
-        opt_list[[i]] <- list()
+        em_list[[i]]   <- list()
+        par.est[[i]]   <- list()
+        par.se[[i]]    <- list()
+        adrep.est[[i]] <- list()
+        adrep.se[[i]]  <- list()
+        opt_list[[i]]  <- list()
         converge_list[[i]] <- list()
         
         if(save.sdrep) em_full[[i]] <- list()
@@ -227,7 +233,10 @@ loop_through_fn = function(om,
         
         for(s in 1:n_stocks){
           em_list[[i]][[s]] <- em[[s]]$rep
-          sdrep_list[[i]][[s]] <- em[[s]]$sdrep$par.fixed
+          par.est[[i]][[s]] <- as.list(em[[s]]$sdrep, "Estimate")
+          par.se[[i]] = as.list(em[[s]]$sdrep, "Std. Error")
+          adrep.est[[i]] = as.list(em[[s]]$sdrep, "Estimate", report = TRUE)
+          adrep.se[[i]] = as.list(em[[s]]$sdrep, "Std. Error", report = TRUE)
           opt_list[[i]][[s]] <- em[[s]]$opt
           converge_list[[i]][[s]] <- sum(conv,pdHess)
           if(save.sdrep) em_full[[i]][[s]] <- em[[s]]
@@ -303,8 +312,11 @@ loop_through_fn = function(om,
         
         om = update_om_fn(om, om2, interval.info, seed = seed)  
         
-        em_list[[i]] <- em$rep
-        sdrep_list[[i]] <- em$sdrep$par.fixed
+        em_list[[i]] = em$rep
+        par.est[[i]] = as.list(em$sdrep, "Estimate")
+        par.se[[i]] = as.list(em$sdrep, "Std. Error")
+        adrep.est[[i]] = as.list(em$sdrep, "Estimate", report = TRUE)
+        adrep.se[[i]] = as.list(em$sdrep, "Std. Error", report = TRUE)
         opt_list[[i]] <- em$opt
         converge_list[[i]] <- conv+pdHess
         if(save.sdrep) em_full[[i]] <- em
@@ -382,9 +394,12 @@ loop_through_fn = function(om,
         
         om = update_om_fn(om, om2, interval.info, seed = seed)  
         
-        em_list[[i]] <- em$rep
-        sdrep_list[[i]] <- em$sdrep$par.fixed
-        opt_list[[i]] <- em$opt
+        em_list[[i]]   <- em$rep
+        par.est[[i]]   <- as.list(em$sdrep, "Estimate")
+        par.se[[i]]    <- as.list(em$sdrep, "Std. Error")
+        adrep.est[[i]] <- as.list(em$sdrep, "Estimate", report = TRUE)
+        adrep.se[[i]]  <- as.list(em$sdrep, "Std. Error", report = TRUE)
+        opt_list[[i]]  <- em$opt
         converge_list[[i]] <- conv+pdHess
         if(save.sdrep) em_full[[i]] <- em
       }
@@ -463,9 +478,12 @@ loop_through_fn = function(om,
           
           om = update_om_fn(om, om2, interval.info, seed = seed) 
           
-          em_list[[i]] <- em$rep
-          sdrep_list[[i]] <- em$sdrep$par.fixed
-          opt_list[[i]] <- em$opt
+          em_list[[i]]   <- em$rep
+          par.est[[i]]   <- as.list(em$sdrep, "Estimate")
+          par.se[[i]]    <- as.list(em$sdrep, "Std. Error")
+          adrep.est[[i]] <- as.list(em$sdrep, "Estimate", report = TRUE)
+          adrep.se[[i]]  <- as.list(em$sdrep, "Std. Error", report = TRUE)
+          opt_list[[i]]  <- em$opt
           converge_list[[i]] <- conv+pdHess
           if(save.sdrep) em_full[[i]] <- em
         }
@@ -543,9 +561,12 @@ loop_through_fn = function(om,
           
           om = update_om_fn(om, om2, interval.info, seed = seed) 
           
-          em_list[[i]] <- em$rep
-          sdrep_list[[i]] <- em$sdrep$par.fixed
-          opt_list[[i]] <- em$opt
+          em_list[[i]]   <- em$rep
+          par.est[[i]]   <- as.list(em$sdrep, "Estimate")
+          par.se[[i]]    <- as.list(em$sdrep, "Std. Error")
+          adrep.est[[i]] <- as.list(em$sdrep, "Estimate", report = TRUE)
+          adrep.se[[i]]  <- as.list(em$sdrep, "Std. Error", report = TRUE)
+          opt_list[[i]]  <- em$opt
           converge_list[[i]] <- conv+pdHess
           if(save.sdrep) em_full[[i]] <- em
         }
@@ -619,14 +640,24 @@ loop_through_fn = function(om,
         
         om = update_om_fn(om, om2, interval.info, seed = seed) 
         
-        em_list[[i]] <- em$rep
-        sdrep_list[[i]] <- em$sdrep$par.fixed
-        opt_list[[i]] <- em$opt
+        em_list[[i]]   <- em$rep
+        par.est[[i]]   <- as.list(em$sdrep, "Estimate")
+        par.se[[i]]    <- as.list(em$sdrep, "Std. Error")
+        adrep.est[[i]] <- as.list(em$sdrep, "Estimate", report = TRUE)
+        adrep.se[[i]]  <- as.list(em$sdrep, "Std. Error", report = TRUE)
+        opt_list[[i]]  <- em$opt
         converge_list[[i]] <- conv+pdHess
         if(save.sdrep) em_full[[i]] <- em
       }
     }
   }
-  if(save.sdrep) return(list(om = om, sdrep_list = sdrep_list, em_list  = em_list, opt_list = opt_list, converge_list = converge_list, em_full = em_full))
-  return(list(om = om, sdrep_list = sdrep_list, em_list  = em_list, opt_list = opt_list, converge_list = converge_list, em_full = NULL))
+  return(list(om = om, 
+              em_list   = em_list, 
+              par.est   = par.est, 
+              par.se    = par.se, 
+              adrep.est = adrep.est,
+              adrep.se  = adrep.se,
+              opt_list  = opt_list, 
+              converge_list = converge_list, 
+              em_full = em_full))
 }
