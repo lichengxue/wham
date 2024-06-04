@@ -49,7 +49,7 @@
 #' data <- make_em_input(mod,em.opt = list(separate.em = TRUE, separate.em.type = 1, do.move = FALSE, est.move = FALSE), year.use = 10, em_years = 1973:2022)
 #' }
 
-make_em_input = function(om, 
+make_em_input = function(om = NULL, 
                          M_em = NULL, 
                          sel_em = NULL, 
                          NAA_re_em = NULL, 
@@ -59,7 +59,7 @@ make_em_input = function(om,
                          year.use = NULL,
                          age_comp_em = "multinomial") {
   
-  if(is.null(em.opt)) stop("em.opt must be specified!")
+  if (is.null(em.opt)) stop("em.opt must be specified!")
   if (em.opt$separate.em) em.opt$do.move = FALSE 
   if (!em.opt$separate.em & !em.opt$do.move) move.type = 3 # no movement
   if (!em.opt$separate.em & em.opt$do.move & all(move_em$stock_move)) move.type = 2 # bidirectional
@@ -70,16 +70,16 @@ make_em_input = function(om,
   if (!is.null(year.use)) {
     
     if (year.use > length(em_years)) {
-      warnings("year.use must be > em_years!\nyear.use is set to equal to em_years")
+      cat("year.use must be > em_years!\nyear.use is set to equal to em_years")
       year.use = length(em_years)
-      ind_em = em_years
+      ind_em = (length(em_years)-year.use+1):length(em_years)
     } else {
       ind_em = (length(em_years)-year.use+1):length(em_years)
       em_years = tail(em_years,year.use)
       }
   } else {
     year.use = length(em_years)
-    ind_em = em_years
+    ind_em = (length(em_years)-year.use+1):length(em_years)
   }
   
   if (em.opt$separate.em){

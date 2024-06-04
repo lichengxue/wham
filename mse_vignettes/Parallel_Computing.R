@@ -11,9 +11,9 @@ library(wham)
 # roxygen2::roxygenize(file.path(main.dir,"wham"))
 
 # Create a folder to save your results
-folder.name = "Example_5"
+folder.name = "Example_pc"
 sub.dir <- folder.name
-if (file.exists(sub.dir)){
+if (file.exists(file.path(main.dir,sub.dir))){
   setwd(file.path(main.dir,sub.dir))
 } else {
   dir.create(file.path(main.dir,sub.dir))
@@ -26,9 +26,9 @@ if (file.exists(sub.dir)){
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 
-year_start  <- 2003  # starting year in the burn-in period
+year_start  <- 1973  # starting year in the burn-in period
 year_end    <- 2022  # end year in the burn-in period
-MSE_years   <- 30    # number of years in the feedback loop
+MSE_years   <- 60    # number of years in the feedback loop
 
 basic_info <- generate_basic_info(n_stocks   = 2, 
                                   n_regions  = 2, 
@@ -42,7 +42,7 @@ basic_info <- generate_basic_info(n_stocks   = 2,
                                   Fbar_ages     = 12, 
                                   recruit_model = 2, 
                                   q = 0.2, 
-                                  F_info     = list(F.year1 = 0.4, Fhist = "Fmsy-H-L"), 
+                                  F_info     = list(F.year1 = 0.2, Fhist = "updown", Fmax = 0.5, Fmin = 0.2, change_time = 0.5), 
                                   catch_info = list(catch_cv = 0.1, catch_Neff = 200), 
                                   index_info = list(index_cv = 0.2, index_Neff = 100, fracyr_indices = 0.5), 
                                   fracyr_spawn = 0.5, 
@@ -73,24 +73,34 @@ sel <- list(model=rep("logistic",n_fleets+n_indices),
             initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)),
             fix_pars=rep(list(NULL),n_fleets+n_indices))
 
-# NAA Configuration
-sigma      <- "rec+1"
-re_cor     <- "iid"
-# option   <- c("age-specific-fe", "equilibrium","iid-re", "ar1-re")
-ini.opt    <- "equilibrium"
-NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
-               sigma=rep(sigma,n_stocks),
-               cor=rep(re_cor,n_stocks))
-
 # M Configuration
-# M <- list(model="constant") # Default is M = 0.2
 M <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
 
-input <- prepare_wham_input(basic_info = basic_info, selectivity = sel, M = M, NAA_re = NAA_re, move = move)
+# Configure NAA random effects
+sigma        <- "rec+1"
+re_cor       <- "iid"
+ini.opt      <- "equilibrium" # option   <- c("age-specific-fe", "equilibrium")
+Rec_sig      <- 0.2 # (sigma for recruitment)
+NAA_sig      <- 0.2 # (sigma for NAA)
 
-input$par$mean_rec_pars[1,1] <- log(exp(10)*2) # Change mean rec for first stock
-input$par$log_N1[1,1,1]      <- log(exp(10)*2) # Change initial N1 for the first stock
-input$par$log_NAA_sigma[]    <- log(0.5) # Change the sigma for NAA (Rec+1) to be log(0.5)
+# Set initial NAA for each stock
+log_N1 = c(log(exp(10)*2), 10) # Create difference between stocks
+N1_pars <- generate_ini_N1(log_N1,basic_info,ini.opt)
+
+# Set mean recruitment para. for each stock
+mean_rec_par <- list()
+for (i in 1:n_stocks) mean_rec_par[[i]] = exp(log_N1[i])
+
+NAA_re <- list(N1_model=rep(ini.opt,n_stocks),
+               sigma=rep(sigma,n_stocks),
+               cor=rep(re_cor,n_stocks),
+               recruit_model = 2,  # rec random around the mean
+               recruit_pars = mean_rec_par, 
+               sigma_vals = rep(list(c(Rec_sig,rep(NAA_sig,n_ages-1))),n_stocks),  # two sigmas when "rec+1"
+               N1_pars = N1_pars)
+
+# Generate wham input 
+input <- prepare_wham_input(basic_info = basic_info, selectivity = sel, M = M, NAA_re = NAA_re, move = move)
 
 # Global SPR is calculated based on weights of mean rec par 
 input$data$SPR_weight_type = 1
@@ -111,11 +121,11 @@ mods <- list()
 
 library(doParallel)
 library(foreach)
-cluster <- makeCluster(5)
+cluster <- makeCluster(10)
 registerDoParallel(cluster)
 
-results <- list()
-results <- foreach (i = 1:10) %dopar% {
+# results <- list()
+results <- foreach (i = 1:5) %dopar% {
   
   library(wham)
   
@@ -151,19 +161,21 @@ results <- foreach (i = 1:10) %dopar% {
                            base_years = base.years,
                            year.use = 20, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
                            seed = 123+i,
-                           save.sdrep = FALSE)
-    results[[i]] <- mod
+                           save.sdrep = TRUE)
     
-  }, error = function(e) {
+    saveRDS(mod,file.path(getwd(),sprintf("Mod4_%03d.RDS",i)))
     
-    warning(paste("Iteration",i,"failed","e$message"))
-    
-    results[[i]] <- NULL
-    
-  })
-
+  #   results[[i]] <- mod
+  #   
+  # }, error = function(e) {
+  #   
+  #   warning(paste("Iteration",i,"failed","e$message"))
+  #   
+  #   results[[i]] <- NULL
+  #   
+    })
 }
-saveRDS(results,"Mod_4.RDS")
+# saveRDS(results,"Mod_4.RDS")
 
 stopCluster(cluster)
 

@@ -7,6 +7,8 @@
 #' @param input list containing data, parameters, map, and random elements (output from \code{\link{prepare_wham_input}}). NOT from prepare_projection or project_wham
 #' @param years_peeled which of input$years to peel from the model input
 #'
+#' @export
+#' 
 reduce_input <- function(input,years_peeled){
 	
 	if(input$data$n_years_proj>0) stop("cannot run wham:::reduce_input on an input for a projection")

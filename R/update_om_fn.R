@@ -19,7 +19,7 @@
 #' @seealso \code{\link{update_om_F}}
 #' 
 update_om_fn <- function(om, om2, interval.info, seed = 123) {
-  proj_opts = list(n.yrs=length(interval.info$years), proj.catch = interval.info$catch)
+  proj_opts = list(n.yrs=length(interval.info$years), avg.yrs=tail(om2$years,5), proj.catch = interval.info$catch)
   em_proj = project_wham(om2, proj.opts = proj_opts, MakeADFun.silent=TRUE)
   assess_interval = length(interval.info$years)
   updated_F = log(tail(em_proj$rep$Fbar,assess_interval))
@@ -32,6 +32,6 @@ update_om_fn <- function(om, om2, interval.info, seed = 123) {
   om_sim = om$simulate(complete=TRUE) #resimulate the population and observations
   om$input$data[obs_names] = om_sim[obs_names] #update any simulated data
   om$input$par[om$input$random] = om_sim[om$input$random]
-  om <- fit_wham(om$input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, MakeADFun.silent = TRUE)
+  om <- fit_wham(om$input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE)
   return(om)
 }

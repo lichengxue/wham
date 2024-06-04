@@ -102,7 +102,7 @@ loop_through_fn = function(om,
                            M_em, 
                            sel_em, 
                            NAA_re_em,
-                           move_em = NULL,
+                           move_em,
                            em.opt = NULL,
                            age_comp_em = "multinomial",
                            assess_years = NULL, 
@@ -161,7 +161,7 @@ loop_through_fn = function(om,
                                  M_em = M_em, 
                                  sel_em = sel_em, 
                                  NAA_re_em = NAA_re_em, 
-                                 move_em,
+                                 move_em = move_em),
                                  em.opt = em.opt,
                                  em_years = em.years,
                                  year.use = year.use,
@@ -221,7 +221,7 @@ loop_through_fn = function(om,
           om_input$data$SPR_weights     = SPR_weights
         }
 
-        om2 <- fit_wham(om_input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, MakeADFun.silent = TRUE)
+        om2 <- fit_wham(om_input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE)
         
         om = update_om_fn(om, om2, interval.info, seed = seed)
         
@@ -247,7 +247,7 @@ loop_through_fn = function(om,
                                  M_em = M_em, 
                                  sel_em = sel_em, 
                                  NAA_re_em = NAA_re_em, 
-                                 move_em,
+                                 move_em = move_em,
                                  em.opt = em.opt,
                                  em_years = em.years,
                                  year.use = year.use,
@@ -297,7 +297,7 @@ loop_through_fn = function(om,
           om_input$data$SPR_weights     = SPR_weights
         }
 
-        om2 <- fit_wham(om_input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, MakeADFun.silent = TRUE)
+        om2 <- fit_wham(om_input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE)
         
         # update F in the operating model and re-simulate the data given the updated F
         
@@ -323,7 +323,7 @@ loop_through_fn = function(om,
                                  M_em = M_em, 
                                  sel_em = sel_em, 
                                  NAA_re_em = NAA_re_em, 
-                                 move_em,
+                                 move_em = move_em,
                                  em.opt = em.opt,
                                  em_years = em.years,
                                  year.use = year.use,
@@ -376,7 +376,7 @@ loop_through_fn = function(om,
           om_input$data$SPR_weights     = SPR_weights
         }
         
-        om2 <- fit_wham(om_input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, MakeADFun.silent = TRUE)
+        om2 <- fit_wham(om_input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE)
         
         # update F in the operating model and re-simulate the data given the updated F
         
@@ -407,7 +407,7 @@ loop_through_fn = function(om,
                                    M_em = M_em, 
                                    sel_em = sel_em, 
                                    NAA_re_em = NAA_re_em, 
-                                   move_em,
+                                   move_em = move_em,
                                    em.opt = em.opt,
                                    em_years = em.years,
                                    year.use = year.use,
@@ -457,7 +457,7 @@ loop_through_fn = function(om,
             om_input$data$SPR_weights     = SPR_weights
           }
           
-          om2 <- fit_wham(om_input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, MakeADFun.silent = TRUE)
+          om2 <- fit_wham(om_input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE)
           
           # update F in the operating model and re-simulate the data given the updated F
           
@@ -469,7 +469,7 @@ loop_through_fn = function(om,
           converge_list[[i]] <- conv+pdHess
           if(save.sdrep) em_full[[i]] <- em
         }
-      } else { # equivalent to if(do.move & !est.move)
+      } else { # equivalent to if(do.move & !est.move) # Correct model
         
         for(y in assess_years){
           
@@ -482,15 +482,15 @@ loop_through_fn = function(om,
                                    M_em = M_em, 
                                    sel_em = sel_em, 
                                    NAA_re_em = NAA_re_em, 
-                                   move_em, 
+                                   move_em = move_em, 
                                    em.opt = em.opt,
                                    em_years = em.years,
                                    year.use = year.use,
                                    age_comp = age_comp_em)
           
           # Fix the movement (don't estimate movement)
-          sigma_vals = 0.2
-          em_input$par$mu_repars[,,,,1] = log(sigma_vals)
+          # sigma_vals = 0.2
+          # em_input$par$mu_repars[,,,,1] = log(sigma_vals)
           em_input <- fix_move(em_input)
           
           # fit the estimation model
@@ -537,7 +537,7 @@ loop_through_fn = function(om,
             om_input$data$SPR_weights     = SPR_weights
           }
           
-          om2 <- fit_wham(om_input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, MakeADFun.silent = TRUE)
+          om2 <- fit_wham(om_input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE)
           
           # update F in the operating model and re-simulate the data given the updated F
           
@@ -563,7 +563,7 @@ loop_through_fn = function(om,
                                  M_em = M_em, 
                                  sel_em = sel_em, 
                                  NAA_re_em = NAA_re_em, 
-                                 move_em = NULL, 
+                                 move_em = move_em, 
                                  em.opt = em.opt,
                                  em_years = em.years,
                                  year.use = year.use,
@@ -613,7 +613,7 @@ loop_through_fn = function(om,
           om_input$data$SPR_weights     = SPR_weights
         }
         
-        om2 <- fit_wham(om_input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, MakeADFun.silent = TRUE)
+        om2 <- fit_wham(om_input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE)
         
         # update F in the operating model and re-simulate the data given the updated F
         
