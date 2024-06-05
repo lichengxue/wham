@@ -18,6 +18,7 @@ You can download the “mse” branch of the “wham” package from Github by f
   ## Install "multi-wham-mse" package
   For the users who are installing "wham" for the first time:
   ```r
+# Make sure you have the most updated Rtools (used to compile TMB code) installed before running the install.packages function
 install.packages(file.path(library/you/download/package,"wham"), dependencies = TRUE, repos = NULL, type = "source")
 # devtools::install_local(file.path(main.dir,"wham"), dependencies = TRUE) # Alternative
 # Remember load the "mse" package using:
@@ -37,6 +38,7 @@ file.copy(from = file.path(library_paths,"wham"), to = file.path(library_paths,n
 
 # library(wham, lib.loc = file.path(library_paths,new_folder)) # Load the single wham package
 
+# Make sure you have the most updated Rtools (used to compile TMB code) installed before running the install.packages function
 install.packages(file.path(library/you/download/package,"wham"), dependencies = TRUE, repos = NULL, type = "source")
 # devtools::install_local(file.path(main.dir,"wham"), dependencies = TRUE) # Alternative
 # Remember load the "mse" package using:
@@ -178,6 +180,9 @@ om <- fit_wham(input, do.fit = F, do.brps = F, MakeADFun.silent = TRUE)
 sim_fn <- function(om, self.fit = FALSE){
   input <- om$input
   input$data <- om$simulate(complete=TRUE)
+  # $simulate() is a function to generate datasets given the parameters defined in the OM
+  # Note: process error and observation error are both turned on when simulating datasets 
+  # To turn them off, use basic_info$simulate_process_error = 0 and basic_info$simulate_observation_error = 0
   if(self.fit) {
     fit <- fit_wham(input, do.osa = FALSE, do.retro = FALSE, MakeADFun.silent = FALSE)
     return(fit)

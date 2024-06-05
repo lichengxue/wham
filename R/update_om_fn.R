@@ -23,8 +23,7 @@ update_om_fn <- function(om, om2, interval.info, seed = 123) {
   em_proj = project_wham(om2, proj.opts = proj_opts, MakeADFun.silent=TRUE)
   assess_interval = length(interval.info$years)
   updated_F = log(tail(em_proj$rep$Fbar,assess_interval))
-  updated_F[is.nan(updated_F)] <- log(100)
-  updated_F[updated_F>log(100)] <- log(100)
+  updated_F[is.nan(updated_F) | updated_F>=log(10)] <- log(10)
   cat(paste0("\nFsolve: ", exp(updated_F),"\n"))
   year_ind = which(om$years %in% interval.info$years)
   om$input$par$F_pars[year_ind,] = updated_F
