@@ -26,7 +26,7 @@ if (file.exists(file.path(main.dir,sub.dir))){
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 
-year_start  <- 1993  # starting year in the burn-in period
+year_start  <- 1973  # starting year in the burn-in period
 year_end    <- 2022  # end year in the burn-in period
 MSE_years   <- 30    # number of years in the feedback loop
 
@@ -80,7 +80,7 @@ M <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n
 sigma        <- "rec+1"
 re_cor       <- "iid"
 ini.opt      <- "equilibrium" # option   <- c("age-specific-fe", "equilibrium")
-Rec_sig      <- 0.5 # (sigma for recruitment)
+Rec_sig      <- 1 # (sigma for recruitment)
 NAA_sig      <- 0.2 # (sigma for NAA)
 
 # Set initial NAA for each stock
@@ -118,59 +118,58 @@ first.year      = head(base.years,1)
 terminal.year   = tail(base.years,1)
 assess.years    = seq(terminal.year, tail(om$years,1)-assess.interval,by = assess.interval)
 
+# -----------------------------------------------------------------------------
+# ------------------ Correct assessment model with move fixed -----------------
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
 # library(doParallel)
 # library(foreach)
 # cluster <- makeCluster(10)
 # registerDoParallel(cluster)
-# 
-# # results <- list()
+
 # results <- foreach (i = 1:5) %dopar% {
-#   
-#   library(wham)
-#   
-#   data <- generate_data(om, seed = 123+i)
-#   
-#   n_stocks = n_regions = 2
-#   n_fleets = n_indices = 2
-#   
-#   sel_em <- list(model=rep("logistic",n_fleets+n_indices),
-#                  initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)),
-#                  fix_pars=rep(list(NULL),n_fleets+n_indices))
-#   
-#   NAA_re_em <- list(N1_model=rep("equilibrium",n_stocks),
-#                     sigma=rep("rec+1",n_stocks),
-#                     cor=rep("iid",n_stocks))
-#   
-#   M_em <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
-#   
-#   tryCatch({
-#     mod <- loop_through_fn(om = data,
-#                            M_om = M,
-#                            sel_om = sel,
-#                            NAA_re_om = NAA_re,
-#                            mean_rec_weights = c(2/3,1/3),
-#                            move_om = move,
-#                            M_em = M_em,
-#                            sel_em = sel_em,
-#                            NAA_re_em = NAA_re_em,
-#                            move_em = move,
-#                            em.opt = list(separate.em = FALSE, separate.em.type = 3, do.move = TRUE, est.move = FALSE),
-#                            assess_years = assess.years,
-#                            assess_interval = assess.interval,
-#                            base_years = base.years,
-#                            year.use = 20, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
-#                            seed = 123+i,
-#                            save.sdrep = TRUE)
-#     
-#     saveRDS(mod,file.path(getwd(),sprintf("Mod4_%03d.RDS",i)))
-#     }, error = function(e) {
-# 
-#       warnings(paste("Iteration",i,"failed","e$message"))
-#       
-#   })
-# }
-# 
-# stopCluster(cluster)
+for (i in 1:1) {
+  library(wham)
+
+  data <- generate_data(om, seed = 123+i)
+
+  n_stocks = n_regions = 2
+  n_fleets = n_indices = 2
+
+  sel_em <- list(model=rep("logistic",n_fleets+n_indices),
+                 initial_pars=c(rep(list(fleet_pars),n_fleets),rep(list(index_pars),n_indices)),
+                 fix_pars=rep(list(NULL),n_fleets+n_indices))
+
+  NAA_re_em <- list(N1_model=rep("equilibrium",n_stocks),
+                    sigma=rep("rec+1",n_stocks),
+                    cor=rep("iid",n_stocks))
+
+  M_em <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
+
+  mod <- loop_through_fn(om = data,
+                         M_om = M,
+                         sel_om = sel,
+                         NAA_re_om = NAA_re,
+                         mean_rec_weights = c(2/3,1/3),
+                         move_om = move,
+                         M_em = M_em,
+                         sel_em = sel_em,
+                         NAA_re_em = NAA_re_em,
+                         move_em = move,
+                         em.opt = list(separate.em = FALSE, separate.em.type = 3, do.move = TRUE, est.move = FALSE),
+                         assess_years = assess.years,
+                         assess_interval = assess.interval,
+                         base_years = base.years,
+                         year.use = 20, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
+                         seed = 123+i,
+                         save.sdrep = FALSE)
+  
+  saveRDS(mod,file.path(getwd(),sprintf("Mod4_%03d.RDS",i)))
+   
+}
+
+stopCluster(cluster)
 
 # mod<-readRDS(sprintf("Mod4_%03d.RDS",1))
 # plot(mod$om$rep$SSB[,1],type="o")
@@ -182,7 +181,13 @@ assess.years    = seq(terminal.year, tail(om$years,1)-assess.interval,by = asses
 # mod$converge_list
 # check_convergence(mod$em_full[[10]])
 # plot_wham_output(mod$em_full[[10]])
+
 # -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# ------------------------ Separate Assessment Models -------------------------
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
 library(doParallel)
 library(foreach)
 cluster <- makeCluster(10)
@@ -201,31 +206,25 @@ foreach (i = 1:5) %dopar% {
   NAA_re_em <- list(N1_model="equilibrium",sigma="rec+1",cor="iid")
   M_em <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n_ages)))
   
-  tryCatch({
-    mod <- loop_through_fn(om = data,
-                           M_om = M,
-                           sel_om = sel,
-                           NAA_re_om = NAA_re,
-                           mean_rec_weights = c(2/3,1/3),
-                           move_om = move,
-                           M_em = M_em,
-                           sel_em = sel_em,
-                           NAA_re_em = NAA_re_em,
-                           move_em = NULL,
-                           em.opt = list(separate.em = TRUE, separate.em.type = 1, do.move = FALSE, est.move = FALSE),
-                           assess_years = assess.years,
-                           assess_interval = assess.interval,
-                           base_years = base.years,
-                           year.use = 20, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
-                           seed = 123+i,
-                           save.sdrep = FALSE)
-    
-    saveRDS(mod,file.path(getwd(),sprintf("Mod1_%03d.RDS",i)))
-  }, error = function(e) {
-    
-    warnings(paste("Iteration",i,"failed","e$message"))
-    
-  })
+  mod <- loop_through_fn(om = data,
+                         M_om = M,
+                         sel_om = sel,
+                         NAA_re_om = NAA_re,
+                         mean_rec_weights = c(2/3,1/3),
+                         move_om = move,
+                         M_em = M_em,
+                         sel_em = sel_em,
+                         NAA_re_em = NAA_re_em,
+                         move_em = NULL,
+                         em.opt = list(separate.em = TRUE, separate.em.type = 1, do.move = FALSE, est.move = FALSE),
+                         assess_years = assess.years,
+                         assess_interval = assess.interval,
+                         base_years = base.years,
+                         year.use = 20, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
+                         seed = 123+i,
+                         save.sdrep = FALSE)
+  
+  saveRDS(mod,file.path(getwd(),sprintf("Mod1_%03d.RDS",i)))
 }
 
 stopCluster(cluster)
@@ -272,7 +271,7 @@ foreach (i = 1:5) %dopar% {
                            base_years = base.years,
                            year.use = 20, # number of years of data you want to use in the assessment model, default is using the data from all years (runtime can be long)
                            seed = 123+i,
-                           save.sdrep = TRUE)
+                           save.sdrep = FALSE)
     
     saveRDS(mod,file.path(getwd(),sprintf("Mod2_%03d.RDS",i)))
   }, error = function(e) {
@@ -285,7 +284,9 @@ foreach (i = 1:5) %dopar% {
 
 stopCluster(cluster)
 
-
+worker_status <- clusterCall(cluster, function() Sys.getpid())
+print(worker_status)
+print(sessionInfo())
 
 mods = list()
 mods1 <- list()

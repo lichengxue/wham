@@ -149,6 +149,8 @@ loop_through_fn = function(om,
       
       for(y in assess_years){
         
+        cat(paste0("\n-----\nStock Assessment in Year ",y,"\n"))
+        
         i <- which(assess_years == y)
         
         em_list[[i]]   <- list()
@@ -201,6 +203,8 @@ loop_through_fn = function(om,
           advice = advice
         }
         
+        cat(paste0("\n-----\nAdvice for the next ", assess_interval, " years = ",advice,"\n"))
+        
         # set the catch for the next assess_interval years
         interval.info = list(catch = advice, years = y + 1:assess_interval)
         
@@ -248,6 +252,8 @@ loop_through_fn = function(om,
 
       for(y in assess_years){
         
+        cat(paste0("\n-----\nStock Assessment in Year ",y,"\n"))
+        
         i <- which(assess_years == y)
         
         em.years = base_years[1]:y
@@ -280,6 +286,8 @@ loop_through_fn = function(om,
         } else {
           advice = advice
         }
+        
+        cat(paste0("\n-----\nAdvice for the next ", assess_interval, " years = ",advice,"\n"))
         
         # set the catch for the next assess_interval years
         interval.info = list(catch = advice, years = y + 1:assess_interval)
@@ -327,6 +335,8 @@ loop_through_fn = function(om,
       # one area model with combined fleet and survey info
       for(y in assess_years){
         
+        cat(paste0("\n-----\nStock Assessment in Year ",y,"\n"))
+        
         i <- which(assess_years == y)
         
         em.years = base_years[1]:y
@@ -360,7 +370,9 @@ loop_through_fn = function(om,
         } else {
           advice = advice
         }
-
+        
+        cat(paste0("\n-----\nAdvice for the next ", assess_interval, " years = ",advice,"\n"))
+        
         # advice <- matrix(c(advice*(2/3),advice*(1/3)), ncol = 2, byrow = TRUE)
         
         # set the catch for the next assess_interval years
@@ -413,6 +425,8 @@ loop_through_fn = function(om,
         
         for(y in assess_years){
           
+          cat(paste0("\n-----\nStock Assessment in Year ",y,"\n"))
+          
           i <- which(assess_years == y)
           
           em.years = base_years[1]:y
@@ -446,6 +460,8 @@ loop_through_fn = function(om,
           } else {
             advice = advice
           }
+          
+          cat(paste0("\n-----\nAdvice for the next ", assess_interval, " years = ",advice,"\n"))
           
           # set the catch for the next assess_interval years
           interval.info = list(catch = advice, years = y + 1:assess_interval)
@@ -491,6 +507,8 @@ loop_through_fn = function(om,
         
         for(y in assess_years){
           
+          cat(paste0("\n-----\nStock Assessment in Year ",y,"\n"))
+          
           i <- which(assess_years == y)
           
           em.years = base_years[1]:y
@@ -529,6 +547,8 @@ loop_through_fn = function(om,
           } else {
             advice = advice
           }
+          
+          cat(paste0("\n-----\nAdvice for the next ", assess_interval, " years = ",advice,"\n"))
           
           # set the catch for the next assess_interval years
           interval.info = list(catch = advice, years = y + 1:assess_interval)
@@ -575,6 +595,8 @@ loop_through_fn = function(om,
       
       for(y in assess_years){
         
+        cat(paste0("\n-----\nStock Assessment in Year ",y,"\n"))
+        
         i <- which(assess_years == y)
         
         em.years = base_years[1]:y
@@ -608,6 +630,8 @@ loop_through_fn = function(om,
         } else {
           advice = advice
         }
+        
+        cat(paste0("\n-----\nAdvice for the next ", assess_interval, " years = ",advice,"\n"))
         
         # set the catch for the next assess_interval years
         interval.info = list(catch = advice, years = y + 1:assess_interval)
@@ -651,13 +675,25 @@ loop_through_fn = function(om,
       }
     }
   }
-  return(list(om = om, 
-              em_list   = em_list, 
-              par.est   = par.est, 
-              par.se    = par.se, 
-              adrep.est = adrep.est,
-              adrep.se  = adrep.se,
-              opt_list  = opt_list, 
-              converge_list = converge_list, 
-              em_full = em_full))
+  if (save.sdrep) {
+    return(list(om = om, 
+                em_list   = em_list, 
+                par.est   = par.est, 
+                par.se    = par.se, 
+                adrep.est = adrep.est,
+                adrep.se  = adrep.se,
+                opt_list  = opt_list, 
+                converge_list = converge_list, 
+                em_full = em_full))
+  } else {
+    return(list(om = om, 
+                em_list   = em_list, 
+                par.est   = par.est, 
+                par.se    = par.se, 
+                adrep.est = adrep.est,
+                adrep.se  = adrep.se,
+                opt_list  = opt_list, 
+                converge_list = converge_list, 
+                em_full = list()))
+  }
 }
