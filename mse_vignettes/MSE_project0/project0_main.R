@@ -25,9 +25,9 @@ if (file.exists(file.path(main.dir,sub.dir))){
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 
-year_start  <- 2073  # starting year in the burn-in period
+year_start  <- 1973  # starting year in the burn-in period
 year_end    <- 2022  # end year in the burn-in period
-MSE_years   <- 15    # number of years in the feedback loop
+MSE_years   <- 3     # number of years in the feedback loop
 
 basic_info <- generate_basic_info(n_stocks   = 2, 
                                   n_regions  = 2, 
@@ -137,7 +137,7 @@ foreach (i = 1:6) %dopar% {
   
   source(file.path(main.dir,"wham/mse_vignettes/generate_config.R"))
   
-  list2env(generate_config(EM.opt = i),envir = .GlobalEnv) 
+  list2env(generate_config(EM.opt = i, move),envir = .GlobalEnv) 
 
   for (nsim in 1) {
     
@@ -161,8 +161,7 @@ foreach (i = 1:6) %dopar% {
                            seed = 123+nsim,
                            save.sdrep = FALSE)
     
-    saveRDS(mod,file.path(getwd(),sprintf("Mod",i,"_%03d.RDS",nsim)))
-    
+    saveRDS(mod,file.path(getwd(),paste0("Mod_",i,sprintf("_%03d.RDS",nsim))))
   }
 }
 
@@ -194,7 +193,7 @@ foreach (i = 1:6) %dopar% {
   
   list2env(generate_config(EM.opt = i),envir = .GlobalEnv) 
   
-  for (nsim in 2:10) {
+  for (nsim in 1:10) {
     
     data <- generate_data(om, seed = 123+nsim)
     
@@ -216,8 +215,7 @@ foreach (i = 1:6) %dopar% {
                            seed = 123+nsim,
                            save.sdrep = FALSE)
     
-    saveRDS(mod,file.path(getwd(),sprintf("Mod",i,"_%03d.RDS",nsim)))
-    
+    saveRDS(mod,file.path(getwd(),paste0("Mod_",i,sprintf("_%03d.RDS",nsim))))
   }
 }
 
