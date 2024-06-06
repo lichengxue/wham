@@ -1,4 +1,4 @@
-generate_config <- function(EM.opt = 1) {
+generate_config <- function(EM.opt = 1, move) {
   fleet_pars <- c(5,1)
   index_pars <- c(2,1)
   n_ages     <- 12
