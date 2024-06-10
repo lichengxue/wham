@@ -1130,7 +1130,7 @@ plot_mse_output <- function(mods, main.dir = getwd(),
               legend.title = element_text(size=12,face="bold")) +
         theme(strip.text.x = element_text(size=12, color="black",
                                           face="bold.italic")) +
-        geom_point(data = df2, aes(x=Overfished,y=Overfishing),colour="black",size = 2.5, shape = 21, stroke = 2, alpha = .1) +
+        # geom_point(data = df2, aes(x=Overfished,y=Overfishing),colour="black",size = 2.5, shape = 21, stroke = 2, alpha = .1) +
         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
               panel.background = element_blank(), axis.line = element_line(colour = "black")) +
         geom_vline(xintercept = 0.5, linetype = "dashed", color = "red",size = 1) + 
