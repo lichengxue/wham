@@ -27,7 +27,7 @@ if (file.exists(file.path(main.dir,sub.dir))){
 
 year_start  <- 1973  # starting year in the burn-in period
 year_end    <- 2022  # end year in the burn-in period
-MSE_years   <- 3     # number of years in the feedback loop
+MSE_years   <- 15    # number of years in the feedback loop
 
 basic_info <- generate_basic_info(n_stocks   = 2, 
                                   n_regions  = 2, 
@@ -76,8 +76,8 @@ M <- list(model="constant",initial_means=array(0.2, dim = c(n_stocks,n_regions,n
 sigma        <- "rec+1"
 re_cor       <- "iid"
 ini.opt      <- "equilibrium" # option   <- c("age-specific-fe", "equilibrium")
-Rec_sig      <- 0.5 # (sigma for recruitment)
-NAA_sig      <- 0.5 # (sigma for NAA)
+Rec_sig      <- 0.2 # (sigma for recruitment)
+NAA_sig      <- 0.2 # (sigma for NAA)
 
 # Set initial NAA for each stock
 log_N1 = c(log(exp(10)*2), 10) # Create difference between stocks
@@ -131,7 +131,7 @@ library(foreach)
 cluster <- makeCluster(detectCores()-2)
 registerDoParallel(cluster)
 
-foreach (i = 1:6) %dopar% {
+foreach (i = 1:5) %dopar% {
   
   library(wham)
   
@@ -139,7 +139,7 @@ foreach (i = 1:6) %dopar% {
   
   list2env(generate_config(EM.opt = i, move),envir = .GlobalEnv) 
 
-  for (nsim in 1) {
+  for (nsim in 31:40) {
     
     data <- generate_data(om, seed = 123+nsim)
     
