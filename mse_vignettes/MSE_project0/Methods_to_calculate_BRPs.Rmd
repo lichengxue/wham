@@ -1,0 +1,78 @@
+---
+title: "Global_SPR-based_BRP"
+author: "Chengxue Li"
+date: "2024-06-11"
+output: pdf_document
+---
+
+## Steps to calculate BRPs in multi-wham
+
+### 1. Calculate Regional SPR0:
+
+-   Use region-specific biological and fishery parameters to calculate SPR0 for each region.
+
+### 2. Calculate region-specific recruitment total recruitment
+
+### 3. Calculate Weighted Global SPR0:
+
+-   Use mean recruitment weights to combine regional SPR0 values into a weighted global SPR0.
+
+### 4. Iterative Solver for Global F40%:
+
+-   Perform iterative calculations, including region-specific biological and fishery parameters, to solve for the global F40%.
+
+### 5. Extract Global F40%:
+
+-   Convert the results from the iterative solver to get the global F40% fishing mortality rate.
+
+### 6. Calculate Regional F40%:
+
+-   Using the global F40% as a reference, calculate the regional F40% by adjusting the fishing mortality rates specific to each region.
+
+## Key Information and Parameters
+
+1.  Recruitment Data:
+
+-   Mean recruitment values for each region.
+-   Annual recruitment data.
+
+2.  Spawning and Maturity Data:
+
+-   Spawning seasons (spawn_seasons).
+-   Maturity-at-age matrix (mat).
+-   Fraction of the year in which spawning occurs (fracyr_seasons).
+
+3.  Fishing Effort and Selectivity Data:
+
+-   Fleet regions (fleet_regions).
+-   Fleet seasons (fleet_seasons).
+-   Fishing mortality at age (FAA) or selectivity at age.
+-   Fleet selectivity (sel).
+
+4.  Biological Parameters:
+
+-   Natural mortality rates (log_M) for each region.
+-   Weight-at-age (waa_ssb).
+-   Length-at-age (L).
+-   Spawning stock biomass fraction (ssbfrac).
+
+5.  Movement and Migration Data:
+
+-   Can move matrix (can_move).
+-   Must move matrix (must_move).
+-   Migration type (mig_type).
+-   Movement matrix (mu).
+
+6.  Initial Population Data:
+
+-   Initial population size or abundance-at-age (NAA).
+
+Additional Parameters:
+
+-   Number of seasons (n_seasons).
+-   Bias correction factor (bias_correct).
+-   Variability in natural mortality (log_NAA_sigma).
+-   Small dimension indicator (small_dim).
+-   Percent SPR for target reference point (e.g., 40% for F40%).
+-   Number of iterations for solver (n_iter).
+-   Trace/debugging indicators if needed.

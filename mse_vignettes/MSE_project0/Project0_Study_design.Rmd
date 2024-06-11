@@ -1,0 +1,101 @@
+---
+title: "Project0 Report"
+author: "Chengxue Li"
+date: "2024-06-10"
+output: pdf_document
+---
+
+## Basic Information
+
+|                              | Stock 1 in Region 1             | Stock 2 in Region 2             |
+|-----------------------|-------------------------|-------------------------|
+| ***Biological Information*** |                                 |                                 |
+| Number of ages               | 12                              | 12                              |
+| Mean recruitment             | 44052.93                        | 22026.47                        |
+| Sigma for Rec                | 0.2                             | 0.2                             |
+| Sigma for NAA                | 0.2                             | 0.2                             |
+| Natural mortality            | 0.2                             | 0.2                             |
+| Weight-at-age                | Empirical WAA\*                 | Empirical WAA\*                 |
+| Maturity-at-age              | Empirical MAA\*                 | Empirical MAA\*                 |
+| Spawning season              | 0.5                             | 0.5                             |
+| Number of seasons            | 4                               | 4                               |
+|                              |                                 |                                 |
+| ***Fishery Information***    |                                 |                                 |
+| Number of fleets             | 1                               | 1                               |
+| Period                       | 1973-2022                       | 1973-2022                       |
+| CV                           | 0.1                             | 0.1                             |
+| ESS                          | 200                             | 200                             |
+| Selectivity form             | Logistic (L~50~ = 5, Slope = 1) | Logistic (L~50~ = 5, Slope = 1) |
+| Likelihood for age comp.     | Multinomial                     | Multinomial                     |
+|                              |                                 |                                 |
+| ***Survey Information***     |                                 |                                 |
+| Number of surveys            | 1                               | 1                               |
+| Survey season                | 0.5                             | 0.5                             |
+| Period                       | 1973-2022                       | 1973-2022                       |
+| CV                           | 0.2                             | 0.2                             |
+| ESS                          | 100                             | 100                             |
+| Selectivity form             | Logistic (L~50~ = 2, Slope = 1) | Logistic (L~50~ = 2, Slope = 1) |
+| Catchability                 | 0.2                             | 0.2                             |
+| Likelihood for age comp.     | Multinomial                     | Multinomial                     |
+
+\* Wiedenmann et al. (2017)
+
+\newpage
+
+## Scenarios
+
+| Scenarios | Movement Direction | Movement Rate\* | Fishing History | Description   |
+|---------------|---------------|---------------|---------------|---------------|
+| OM1       | Bidirectional      | 0.3 0.1         | Fmsy            | Ideal         |
+| OM2       | Bidirectional      | 0.3 0.1         | 2.5Fmsy-Fmsy    | Realistic     |
+| OM3       | Bidirectional      | 0.3 0.1         | 2.5Fmsy         | Unsustainable |
+| OM4       | Unidirectional     | 0.1             | Fmsy            | Ideal         |
+| OM5       | Unidirectional     | 0.1             | 2.5Fmsy-Fmsy    | Realistic     |
+| OM6       | Unidirectional     | 0.1             | 2.5Fmsy         | Unsustainable |
+
+\* Movement rate is assumed to be constant outside the spawning season
+
+## MSE Information
+
+|                        | Value       |
+|------------------------|-------------|
+| Burn-in Years          | 50          |
+| Feedback Years         | 15          |
+| Assessment Interval    | 3           |
+| Total Assessments      | 5           |
+| HCR                    | 75% of F40% |
+| Number of realizations | 40          |
+
+## EM Structure
+
+| Model | Type                                 | Movement | Random effects | Reference point      | Description                                    |
+|------------|------------|------------|------------|------------|------------|
+| EM1   | Panmictic                            | No       | NAA            | Not global SPR-based | Separate assessment models                     |
+| EM2   | Spatially implicit (fleets-as-areas) | No       | NAA            | Not global SPR-based | Multiple fleets account for spatial difference |
+| EM3   | Panmictic (catch aggregated)         | No       | NAA            | Not global SPR-based | Aggregate fleets across regions                |
+| EM4\* | Spatially explicit                   | Yes      | NAA            | Global SPR-based     | Movement rate is fixed as known                |
+| EM5   | Spatially explicit                   | No       | NAA            | Global SPR-based     | Movement is not included                       |
+
+\* EM4 is the OM with movement rate fixed as known
+
+\newpage
+
+## Other EMs to consider
+
+| Model | Type                                 | Movement | Random effects | Reference point      | Description                                    |
+|------------|------------|------------|------------|------------|------------|
+| EM6   | Panmictic                            | No       | **Rec only**   | Not global SPR-based | Separate assessment models                     |
+| EM7   | Spatially implicit (fleets-as-areas) | No       | **Rec only**   | Not global SPR-based | Multiple fleets account for spatial difference |
+| EM8   | Panmictic (catch aggregated)         | No       | **Rec only**   | Not global SPR-based | Aggregate fleets across regions                |
+| EM9   | Spatially explicit                   | Yes      | **Rec only**   | Global SPR-based     | Movement rate is fixed as known                |
+| EM10  | Spatially explicit                   | No       | **Rec only**   | Global SPR-based     | Movement is not included                       |
+
+## What if survey and spawning season mismatch?
+
+Spawning season != Survey season?
+
+## Preliminary Results and Conclusions
+
+Preliminary results can be found here: [***Click here to check the results***](https://github.com/lichengxue/wham/blob/mse/mse_vignettes/MSE_project0/Project0_Results.pdf)
+
+

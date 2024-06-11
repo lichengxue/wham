@@ -21,7 +21,7 @@
 plot_mse_output <- function(mods, main.dir = getwd(), 
                             use.n.years = 10, 
                             base.mod = 4, 
-                            do.short.term = list(first.n.years = 3, year_start = 1973, year_end = 2022), 
+                            do.short.term = list(first.n.years = 3, year_start = 1973, year_end = 2022),
                             dpi = 150) {
   
   require(ggplot2)
@@ -1134,8 +1134,17 @@ plot_mse_output <- function(mods, main.dir = getwd(),
         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
               panel.background = element_blank(), axis.line = element_line(colour = "black")) +
         geom_vline(xintercept = 0.5, linetype = "dashed", color = "red",size = 1) + 
-        geom_hline(yintercept = 1, linetype = "dashed", color = "red",size = 1) +
-        coord_cartesian(ylim = quantile(temp[['Overfishing']],c(0.05,0.95)),xlim = quantile(temp[['Overfished']],c(0.05,0.95)))
+        geom_hline(yintercept = 1, linetype = "dashed", color = "red",size = 1)
+        # coord_cartesian(ylim = quantile(temp[['Overfishing']],c(0.05,0.95)),xlim = quantile(temp[['Overfished']],c(0.05,0.95)))
+      
+      ylim = quantile(temp[['Overfishing']],c(0.05,0.95))
+      ylim[1] = 0
+      xlim = quantile(temp[['Overfished']],c(0.05,0.95))
+      xlim[1] = 0
+      if(ylim[2]>2) ylim[2] = 2
+      if(xlim[2]>2) xlim[2] = 2
+      p <- p + coord_cartesian(ylim = ylim,xlim = xlim)
+      
       ggsave(file.path(main.dir,sub.dir,paste0("Population_Status_last_",use.n.years,"years_all.PNG")), p, width = 15, height = 5, dpi = dpi)
       
       temp <- temp %>% 
@@ -1176,11 +1185,19 @@ plot_mse_output <- function(mods, main.dir = getwd(),
         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
               panel.background = element_blank(), axis.line = element_line(colour = "black")) +
         geom_vline(xintercept = 0.5, linetype = "dashed", color = "red",size = 1) + 
-        geom_hline(yintercept = 1, linetype = "dashed", color = "red",size = 1) +
-        coord_cartesian(ylim = quantile(temp[['Overfishing']],c(0.05,0.95)),xlim = quantile(temp[['Overfished']],c(0.05,0.95)))
+        geom_hline(yintercept = 1, linetype = "dashed", color = "red",size = 1)
+        # coord_cartesian(ylim = quantile(df[['Overfishing']],c(0.05,0.95)),xlim = quantile(df[['Overfished']],c(0.05,0.95)))
+        
+      ylim = quantile(temp[['Overfishing']],c(0.05,0.95))
+      ylim[1] = 0
+      xlim = quantile(temp[['Overfished']],c(0.05,0.95))
+      xlim[1] = 0
+      if(ylim[2]>2) ylim[2] = 2
+      if(xlim[2]>2) xlim[2] = 2
+      p <- p + coord_cartesian(ylim = ylim,xlim = xlim)
+      
       ggsave(file.path(main.dir,sub.dir,paste0("Population_Status_last_",use.n.years,"years_median.PNG")), p, width = 15, height = 5, dpi = dpi)
-      
-      
+
       # ------------------------------------------------------------
       # ------------------------------------------------------------
       # ------------------ Calculate First N years -----------------
