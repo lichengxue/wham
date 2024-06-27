@@ -46,12 +46,12 @@ get_F_from_Catch_region(
 
 \item{waacatch}{n_fleets x n_ages; weight-at-age}
 
-\item{trace}{trace: 0/1 whether to print stuff to screen}
+\item{trace}{0/1 whether to print stuff to screen}
 
 \item{F_init}{n_regions}
 }
 \value{
-Region-specific F estimated using newton method and nlminb method
+a vector of region-specific F estimated using newton method
 }
 \description{
 The get_F_from_Catch_region() function is used to calculate region-specific F given the aggregate region-specific catch

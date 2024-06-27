@@ -18,7 +18,7 @@
 #' @param trace 0/1 whether to print stuff to screen
 #' @param F_init n_regions
 #' 
-#' @return Region-specific F estimated using newton method and nlminb method 
+#' @return a vector of region-specific F estimated using newton method
 #'
 #' @export
 #' 
@@ -33,15 +33,15 @@ get_F_from_Catch_region <- function(Catch, NAA, log_M, mu, L, sel, fracyr_season
   
   log_F_region <- matrix(log(F_init), nrow = n_fleets, ncol = n)
   
-  obj <- function(log_F, log_catch = log(Catch), trace = FALSE){
-    if(trace) print(log_catch)
-    log_pred_catch <- log_catch_fleets_F_multi(log_F, NAA, log_M, mu, L, sel, fracyr_season, fleet_regions, fleet_seasons, can_move, mig_type, waacatch, trace)
-    if(trace) print(log_pred_catch)
-    return(sum((log_pred_catch - log_catch)^2))
-  }
-  temp <- obj(log_F_init, trace = TRUE)
-  
-  opt <- nlminb(log_F_init, obj)
+  # obj <- function(log_F, log_catch = log(Catch), trace = FALSE){
+  #   if(trace) print(log_catch)
+  #   log_pred_catch <- log_catch_fleets_F_multi(log_F, NAA, log_M, mu, L, sel, fracyr_season, fleet_regions, fleet_seasons, can_move, mig_type, waacatch, trace)
+  #   if(trace) print(log_pred_catch)
+  #   return(sum((log_pred_catch - log_catch)^2))
+  # }
+  # temp <- obj(log_F_init, trace = TRUE)
+  # 
+  # opt <- nlminb(log_F_init, obj)
   
   for (i in 1:(n - 1)) {
     log_F_i <- log_F_region[, i]
@@ -52,7 +52,10 @@ get_F_from_Catch_region <- function(Catch, NAA, log_M, mu, L, sel, fracyr_season
   
   F_iter <- exp(log_F_region[, n])
   
-  return(list(newton = F_iter, nlminb = exp(opt$par)))
+  F_iter[F_iter>10] = 10
+  
+  # return(list(newton = F_iter, nlminb = exp(opt$par)))
+  return(F_iter)
 }
 
 # Helper Functions

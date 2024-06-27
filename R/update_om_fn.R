@@ -2,13 +2,11 @@
 #' 
 #' Function to update F in the operating model (see \code{\link{update_om_F}}) and generate data given the updated F.
 #' 
-#' @param om Operating model with years including burn-in + all feedback years
-#' @param om2 Operating model with years including burn-in years + n feedback years (n = the number of assessments completed x assessment interval)
+#' @param om Operating model with years including burn-in + feedback years
 #' @param interval.info Catch advice for a number of years projected from the estimation model
 #'   \itemize{
 #'     \item \code{"$years"} projection years 
 #'     \item \code{"$catch"} matrix (n_region x n_years) projected catch 
-#'     \item \code{"=NULL"} generate data in the operating model
 #'     }
 #' @param seed Seed used to generate data
 #' 
@@ -16,23 +14,38 @@
 #'   
 #' @export
 #'
-#' @seealso \code{\link{update_om_F}}
+#' @seealso \code{\link{get_F_from_Catch_region}}
 #' 
-update_om_fn <- function(om, om2, interval.info, seed = 123) {
-  proj_opts = list(n.yrs=length(interval.info$years), avg.yrs=tail(om2$years,5), proj.catch = interval.info$catch)
-  em_proj = project_wham(om2, proj.opts = proj_opts, MakeADFun.silent=TRUE)
-  assess_interval = length(interval.info$years)
-  updated_F = log(tail(em_proj$rep$Fbar,assess_interval))
-  updated_F[is.nan(updated_F) | updated_F>=log(10)] <- log(10)
-  cat(paste0("\nFsolve: ", exp(updated_F),"\n"))
-  year_ind = which(om$years %in% interval.info$years)
-  om$input$par$F_pars[year_ind,] = updated_F
+update_om_fn <- function(om, interval.info, seed = 123) {
+  # Iterative update F in the OM using get_F_from_Catch_region function
+  t = 0
+  for (y in interval.info$years) {
+    year = which(om$years == y)
+    t = t+1
+    rep = om$rep
+    Fsolve = get_F_from_Catch_region(Catch = interval.info$catch[t,], 
+                                     NAA   = rep$NAA[,,year,], 
+                                     log_M = log(rep$MAA[,,year,]), 
+                                     mu    = rep$mu[,,,year,,], 
+                                     L     = rep$L[year,], 
+                                     sel   = (rep$FAA/max(rep$FAA))[,year,], 
+                                     fracyr_season = om$input$data$fracyr_seasons, 
+                                     fleet_regions = om$input$data$fleet_regions, 
+                                     fleet_seasons = om$input$data$fleet_seasons, 
+                                     can_move = om$input$data$can_move, 
+                                     mig_type = om$input$data$mig_type, 
+                                     waacatch = om$input$data$waa[om$input$data$waa_pointer_totcatch, year,], 
+                                     trace = TRUE, 
+                                     F_init = rep(0.5,length(om$input$data$n_fleets)))
+    cat(paste0("\nFsolve: ", round(Fsolve,3), " in Year ", y,"\n"))
+    om$input$par$F_pars[year,] = log(Fsolve)
+    obs_names = c("agg_indices","agg_catch","catch_paa","index_paa", "Ecov_obs", "obsvec")
+    set.seed(seed)
+    om_sim = om$simulate(complete=TRUE) #resimulate the population and observations
+    om$input$data[obs_names] = om_sim[obs_names] #update any simulated data
+    om$input$par[om$input$random] = om_sim[om$input$random]
+    om <- fit_wham(om$input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE)
+  }
   
-  obs_names = c("agg_indices","agg_catch","catch_paa","index_paa", "Ecov_obs", "obsvec")
-  set.seed(seed)
-  om_sim = om$simulate(complete=TRUE) #resimulate the population and observations
-  om$input$data[obs_names] = om_sim[obs_names] #update any simulated data
-  om$input$par[om$input$random] = om_sim[om$input$random]
-  om <- fit_wham(om$input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE)
   return(om)
 }

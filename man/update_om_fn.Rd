@@ -4,18 +4,15 @@
 \alias{update_om_fn}
 \title{Update the operating model and generate data}
 \usage{
-update_om_fn(om, om2, interval.info, seed = 123)
+update_om_fn(om, interval.info, seed = 123)
 }
 \arguments{
-\item{om}{Operating model with years including burn-in + all feedback years}
-
-\item{om2}{Operating model with years including burn-in years + n feedback years (n = the number of assessments completed x assessment interval)}
+\item{om}{Operating model with years including burn-in + feedback years}
 
 \item{interval.info}{Catch advice for a number of years projected from the estimation model
 \itemize{
   \item \code{"$years"} projection years 
   \item \code{"$catch"} matrix (n_region x n_years) projected catch 
-  \item \code{"=NULL"} generate data in the operating model
   }}
 
 \item{seed}{Seed used to generate data}
@@ -27,5 +24,5 @@ an operating model with simulated data and updated F time series
 Function to update F in the operating model (see \code{\link{update_om_F}}) and generate data given the updated F.
 }
 \seealso{
-\code{\link{update_om_F}}
+\code{\link{get_F_from_Catch_region}}
 }

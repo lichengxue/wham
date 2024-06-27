@@ -140,6 +140,7 @@ loop_through_fn = function(om,
   adrep.se   <- list()
   opt_list   <- list()
   converge_list  <- list()
+  catch_advice <- list()
   
   if(save.sdrep) em_full <- list()
   
@@ -181,7 +182,7 @@ loop_through_fn = function(om,
         
         conv = rep(0,n_stocks)
         pdHess = rep(0,n_stocks)
-
+        
         for(s in 1:n_stocks){
           em[[s]] = fit_wham(em_input[[s]], do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE) #no feedback period yet
           
@@ -195,45 +196,17 @@ loop_through_fn = function(om,
           
           advice = cbind(advice,tmp)
         }
+        colnames(advice) = paste0("Region_",1:om$input$data$n_fleets)
+        rownames(advice) = paste0("Year_",y + 1:assess_interval)
         
-        if(is.matrix(advice)) {
-          advice = rowSums(advice) 
-          if(length(advice) != assess_interval) warning("Length of projection year must be equal to length of catch advice!")
-        } else {
-          advice = advice
-        }
-        
-        cat(paste0("\n-----\nAdvice for the next ", assess_interval, " years = ",advice,"\n"))
+        cat("\n---------------------------\n")
+        print(advice)
+        cat("\n---------------------------\n")
         
         # set the catch for the next assess_interval years
         interval.info = list(catch = advice, years = y + 1:assess_interval)
         
-        # update the operating model with the right Fs and resimulate the data given those Fs
-        info = generate_basic_info(base.years = em.years)
-        
-        info = generate_NAA_where(basic_info = info, move.type = move.type)
-
-        info$catch_info$agg_catch = om$input$data$agg_catch[1:length(em.years),,drop = F]
-        info$index_info$agg_indices = om$input$data$agg_indices[1:length(em.years),,drop = F]
-        info$catch_info$catch_paa = om$input$data$catch_paa[,1:length(em.years),,drop = F]
-        info$index_info$index_paa = om$input$data$index_paa[,1:length(em.years),,drop = F]
-        info$F_opts$F = exp(om$input$par$F_pars[1:length(em.years),])
-        
-        om_input = prepare_wham_input(basic_info = info, 
-                                      selectivity = sel_om, 
-                                      M = M_om, 
-                                      NAA_re = NAA_re_om, 
-                                      move = move_om,
-                                      age_comp = age_comp_om)
-        
-        if(!is.null(mean_rec_weights)){
-          om_input$data$SPR_weight_type = om_input$data$do_SPR_BRPs = 1
-          om_input$data$SPR_weights     = SPR_weights
-        }
-
-        om2 <- fit_wham(om_input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE)
-        
-        om = update_om_fn(om, om2, interval.info, seed = seed)
+        om = update_om_fn(om, interval.info, seed = seed)
         
         for(s in 1:n_stocks){
           em_list[[i]][[s]] <- em[[s]]$rep
@@ -243,13 +216,14 @@ loop_through_fn = function(om,
           adrep.se[[i]] = as.list(em[[s]]$sdrep, "Std. Error", report = TRUE)
           opt_list[[i]][[s]] <- em[[s]]$opt
           converge_list[[i]][[s]] <- sum(conv,pdHess)
+          catch_advice[[i]] <- advice
           if(save.sdrep) em_full[[i]][[s]] <- em[[s]]
         }
       }
     }
     
     if (em.opt$separate.em.type == 2) {
-
+      
       for(y in assess_years){
         
         cat(paste0("\n-----\nStock Assessment in Year ",y,"\n"))
@@ -280,45 +254,18 @@ loop_through_fn = function(om,
         # make the catch advice
         advice = advice_fn(em, pro.yr = assess_interval, hcr.type = hcr.type, hcr.opts = hcr.opts)
         
-        if(is.matrix(advice)) {
-          advice = rowSums(advice) 
-          if(length(advice) != assess_interval) warning("Length of projection year must be equal to length of catch advice!")
-        } else {
-          advice = advice
-        }
+        colnames(advice) = paste0("Region_",1:om$input$data$n_fleets)
+        rownames(advice) = paste0("Year_",y + 1:assess_interval)
         
-        cat(paste0("\n-----\nAdvice for the next ", assess_interval, " years = ",advice,"\n"))
+        cat("\n---------------------------\n")
+        print(advice)
+        cat("\n---------------------------\n")
         
         # set the catch for the next assess_interval years
         interval.info = list(catch = advice, years = y + 1:assess_interval)
         
-        info = generate_basic_info(base.years = em.years)
-        
-        info = generate_NAA_where(basic_info = info, move.type = move.type)
-
-        info$catch_info$agg_catch = om$input$data$agg_catch[1:length(em.years),,drop = F]
-        info$index_info$agg_indices = om$input$data$agg_indices[1:length(em.years),,drop = F]
-        info$catch_info$catch_paa = om$input$data$catch_paa[,1:length(em.years),,drop = F]
-        info$index_info$index_paa = om$input$data$index_paa[,1:length(em.years),,drop = F]
-        info$F_opts$F = exp(om$input$par$F_pars[1:length(em.years),])
-        
-        om_input = prepare_wham_input(basic_info = info, 
-                                      selectivity = sel_om, 
-                                      M = M_om, 
-                                      NAA_re = NAA_re_om, 
-                                      move = move_om,
-                                      age_comp = age_comp_om)
-        
-        if(!is.null(mean_rec_weights)){
-          om_input$data$SPR_weight_type = om_input$data$do_SPR_BRPs = 1
-          om_input$data$SPR_weights     = SPR_weights
-        }
-
-        om2 <- fit_wham(om_input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE)
-        
         # update F in the operating model and re-simulate the data given the updated F
-        
-        om = update_om_fn(om, om2, interval.info, seed = seed)  
+        om = update_om_fn(om, interval.info, seed = seed)
         
         em_list[[i]] = em$rep
         par.est[[i]] = as.list(em$sdrep, "Estimate")
@@ -327,6 +274,7 @@ loop_through_fn = function(om,
         adrep.se[[i]] = as.list(em$sdrep, "Std. Error", report = TRUE)
         opt_list[[i]] <- em$opt
         converge_list[[i]] <- conv+pdHess
+        catch_advice[[i]] <- advice
         if(save.sdrep) em_full[[i]] <- em
       }
     }
@@ -352,7 +300,7 @@ loop_through_fn = function(om,
                                  age_comp = age_comp_em)
         
         n_stocks = om$input$data$n_stocks
-
+        
         em = fit_wham(em_input, do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE) #no feedback period yet
         
         # check convergence
@@ -364,47 +312,19 @@ loop_through_fn = function(om,
         # make the catch advice
         advice = advice_fn(em, pro.yr = assess_interval, hcr.type = hcr.type, hcr.opts = hcr.opts)
         
-        if(is.matrix(advice)) {
-          advice = rowSums(advice) 
-          if(length(advice) != assess_interval) warning("Length of projection year must be equal to length of catch advice!")
-        } else {
-          advice = advice
-        }
+        advice <- matrix(c(advice*(1/om$input$data$n_fleets),advice*(1/om$input$data$n_fleets)), ncol =  om$input$data$n_fleets, byrow = TRUE)
         
-        cat(paste0("\n-----\nAdvice for the next ", assess_interval, " years = ",advice,"\n"))
+        colnames(advice) = paste0("Region_",1:om$input$data$n_fleets)
+        rownames(advice) = paste0("Year_",y + 1:assess_interval)
         
-        # advice <- matrix(c(advice*(2/3),advice*(1/3)), ncol = 2, byrow = TRUE)
+        cat("\n---------------------------\n")
+        print(advice)
+        cat("\n---------------------------\n")
         
         # set the catch for the next assess_interval years
         interval.info = list(catch = advice, years = y + 1:assess_interval)
         
-        info = generate_basic_info(base.years = em.years)
-        
-        info = generate_NAA_where(basic_info = info, move.type = move.type)
-
-        info$catch_info$agg_catch = om$input$data$agg_catch[1:length(em.years),,drop = F]
-        info$index_info$agg_indices = om$input$data$agg_indices[1:length(em.years),,drop = F]
-        info$catch_info$catch_paa = om$input$data$catch_paa[,1:length(em.years),,drop = F]
-        info$index_info$index_paa = om$input$data$index_paa[,1:length(em.years),,drop = F]
-        info$F_opts$F = exp(om$input$par$F_pars[1:length(em.years),])
-        
-        om_input = prepare_wham_input(basic_info = info, 
-                                      selectivity = sel_om, 
-                                      M = M_om, 
-                                      NAA_re = NAA_re_om, 
-                                      move = move_om,
-                                      age_comp = age_comp_om)
-        
-        if(!is.null(mean_rec_weights)){
-          om_input$data$SPR_weight_type = om_input$data$do_SPR_BRPs = 1
-          om_input$data$SPR_weights     = SPR_weights
-        }
-        
-        om2 <- fit_wham(om_input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE)
-        
-        # update F in the operating model and re-simulate the data given the updated F
-        
-        om = update_om_fn(om, om2, interval.info, seed = seed)  
+        om = update_om_fn(om, interval.info, seed = seed)  
         
         em_list[[i]]   <- em$rep
         par.est[[i]]   <- as.list(em$sdrep, "Estimate")
@@ -413,6 +333,7 @@ loop_through_fn = function(om,
         adrep.se[[i]]  <- as.list(em$sdrep, "Std. Error", report = TRUE)
         opt_list[[i]]  <- em$opt
         converge_list[[i]] <- conv+pdHess
+        catch_advice[[i]] <- advice
         if(save.sdrep) em_full[[i]] <- em
       }
     }
@@ -454,45 +375,18 @@ loop_through_fn = function(om,
           # make the catch advice
           advice = advice_fn(em, pro.yr = assess_interval, hcr.type = hcr.type, hcr.opts = hcr.opts)
           
-          if(is.matrix(advice)) {
-            advice = rowSums(advice) 
-            if(length(advice) != assess_interval) warning("Length of projection year must be equal to length of catch advice!")
-          } else {
-            advice = advice
-          }
+          colnames(advice) = paste0("Region_",1:om$input$data$n_fleets)
+          rownames(advice) = paste0("Year_",y + 1:assess_interval)
           
-          cat(paste0("\n-----\nAdvice for the next ", assess_interval, " years = ",advice,"\n"))
+          cat("\n---------------------------\n")
+          print(advice)
+          cat("\n---------------------------\n")
           
           # set the catch for the next assess_interval years
           interval.info = list(catch = advice, years = y + 1:assess_interval)
           
-          info = generate_basic_info(base.years = em.years)
-          
-          info = generate_NAA_where(basic_info = info, move.type = move.type)
-          
-          info$catch_info$agg_catch = om$input$data$agg_catch[1:length(em.years),,drop = F]
-          info$index_info$agg_indices = om$input$data$agg_indices[1:length(em.years),,drop = F]
-          info$catch_info$catch_paa = om$input$data$catch_paa[,1:length(em.years),,drop = F]
-          info$index_info$index_paa = om$input$data$index_paa[,1:length(em.years),,drop = F]
-          info$F_opts$F = exp(om$input$par$F_pars[1:length(em.years),])
-          
-          om_input = prepare_wham_input(basic_info = info, 
-                                        selectivity = sel_om, 
-                                        M = M_om, 
-                                        NAA_re = NAA_re_om, 
-                                        move = move_om,
-                                        age_comp = age_comp_om)
-          
-          if(!is.null(mean_rec_weights)){
-            om_input$data$SPR_weight_type = om_input$data$do_SPR_BRPs = 1
-            om_input$data$SPR_weights     = SPR_weights
-          }
-          
-          om2 <- fit_wham(om_input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE)
-          
           # update F in the operating model and re-simulate the data given the updated F
-          
-          om = update_om_fn(om, om2, interval.info, seed = seed) 
+          om = update_om_fn(om, interval.info, seed = seed) 
           
           em_list[[i]]   <- em$rep
           par.est[[i]]   <- as.list(em$sdrep, "Estimate")
@@ -501,6 +395,7 @@ loop_through_fn = function(om,
           adrep.se[[i]]  <- as.list(em$sdrep, "Std. Error", report = TRUE)
           opt_list[[i]]  <- em$opt
           converge_list[[i]] <- conv+pdHess
+          catch_advice[[i]] <- advice
           if(save.sdrep) em_full[[i]] <- em
         }
       } else { # equivalent to if(do.move & !est.move) # Correct model
@@ -541,45 +436,18 @@ loop_through_fn = function(om,
           # make the catch advice
           advice = advice_fn(em, pro.yr = assess_interval, hcr.type = hcr.type, hcr.opts = hcr.opts)
           
-          if(is.matrix(advice)) {
-            advice = rowSums(advice) 
-            if(length(advice) != assess_interval) warning("Length of projection year must be equal to length of catch advice!")
-          } else {
-            advice = advice
-          }
+          colnames(advice) = paste0("Region_",1:om$input$data$n_fleets)
+          rownames(advice) = paste0("Year_",y + 1:assess_interval)
           
-          cat(paste0("\n-----\nAdvice for the next ", assess_interval, " years = ",advice,"\n"))
+          cat("\n---------------------------\n")
+          print(advice)
+          cat("\n---------------------------\n")
           
           # set the catch for the next assess_interval years
           interval.info = list(catch = advice, years = y + 1:assess_interval)
           
-          info = generate_basic_info(base.years = em.years)
-          
-          info = generate_NAA_where(basic_info = info, move.type = move.type)
-          
-          info$catch_info$agg_catch = om$input$data$agg_catch[1:length(em.years),,drop = F]
-          info$index_info$agg_indices = om$input$data$agg_indices[1:length(em.years),,drop = F]
-          info$catch_info$catch_paa = om$input$data$catch_paa[,1:length(em.years),,drop = F]
-          info$index_info$index_paa = om$input$data$index_paa[,1:length(em.years),,drop = F]
-          info$F_opts$F = exp(om$input$par$F_pars[1:length(em.years),])
-          
-          om_input = prepare_wham_input(basic_info = info, 
-                                        selectivity = sel_om, 
-                                        M = M_om, 
-                                        NAA_re = NAA_re_om, 
-                                        move = move_om,
-                                        age_comp = age_comp_om)
-          
-          if(!is.null(mean_rec_weights)){
-            om_input$data$SPR_weight_type = om_input$data$do_SPR_BRPs = 1
-            om_input$data$SPR_weights     = SPR_weights
-          }
-          
-          om2 <- fit_wham(om_input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE)
-          
           # update F in the operating model and re-simulate the data given the updated F
-          
-          om = update_om_fn(om, om2, interval.info, seed = seed) 
+          om = update_om_fn(om, interval.info, seed = seed) 
           
           em_list[[i]]   <- em$rep
           par.est[[i]]   <- as.list(em$sdrep, "Estimate")
@@ -588,6 +456,7 @@ loop_through_fn = function(om,
           adrep.se[[i]]  <- as.list(em$sdrep, "Std. Error", report = TRUE)
           opt_list[[i]]  <- em$opt
           converge_list[[i]] <- conv+pdHess
+          catch_advice[[i]] <- advice
           if(save.sdrep) em_full[[i]] <- em
         }
       }
@@ -624,45 +493,18 @@ loop_through_fn = function(om,
         # make the catch advice
         advice = advice_fn(em, pro.yr = assess_interval, hcr.type = hcr.type, hcr.opts = hcr.opts)
         
-        if(is.matrix(advice)) {
-          advice = rowSums(advice) 
-          if(length(advice) != assess_interval) warning("Length of projection year must be equal to length of catch advice!")
-        } else {
-          advice = advice
-        }
+        colnames(advice) = paste0("Region_",1:om$input$data$n_fleets)
+        rownames(advice) = paste0("Year_",y + 1:assess_interval)
         
-        cat(paste0("\n-----\nAdvice for the next ", assess_interval, " years = ",advice,"\n"))
+        cat("\n---------------------------\n")
+        print(advice)
+        cat("\n---------------------------\n")
         
         # set the catch for the next assess_interval years
         interval.info = list(catch = advice, years = y + 1:assess_interval)
         
-        info = generate_basic_info(base.years = em.years)
-        
-        info = generate_NAA_where(basic_info = info, move.type = move.type)
-        
-        info$catch_info$agg_catch = om$input$data$agg_catch[1:length(em.years),,drop = F]
-        info$index_info$agg_indices = om$input$data$agg_indices[1:length(em.years),,drop = F]
-        info$catch_info$catch_paa = om$input$data$catch_paa[,1:length(em.years),,drop = F]
-        info$index_info$index_paa = om$input$data$index_paa[,1:length(em.years),,drop = F]
-        info$F_opts$F = exp(om$input$par$F_pars[1:length(em.years),])
-        
-        om_input = prepare_wham_input(basic_info = info, 
-                                      selectivity = sel_om, 
-                                      M = M_om, 
-                                      NAA_re = NAA_re_om, 
-                                      move = move_om,
-                                      age_comp = age_comp_om)
-        
-        if(!is.null(mean_rec_weights)){
-          om_input$data$SPR_weight_type = om_input$data$do_SPR_BRPs = 1
-          om_input$data$SPR_weights     = SPR_weights
-        }
-        
-        om2 <- fit_wham(om_input, do.fit = FALSE, do.retro = FALSE, do.osa = FALSE, do.brps = TRUE, MakeADFun.silent = TRUE)
-        
         # update F in the operating model and re-simulate the data given the updated F
-        
-        om = update_om_fn(om, om2, interval.info, seed = seed) 
+        om = update_om_fn(om, interval.info, seed = seed) 
         
         em_list[[i]]   <- em$rep
         par.est[[i]]   <- as.list(em$sdrep, "Estimate")
@@ -671,6 +513,7 @@ loop_through_fn = function(om,
         adrep.se[[i]]  <- as.list(em$sdrep, "Std. Error", report = TRUE)
         opt_list[[i]]  <- em$opt
         converge_list[[i]] <- conv+pdHess
+        catch_advice[[i]] <- advice
         if(save.sdrep) em_full[[i]] <- em
       }
     }
@@ -684,6 +527,7 @@ loop_through_fn = function(om,
                 adrep.se  = adrep.se,
                 opt_list  = opt_list, 
                 converge_list = converge_list, 
+                catch_advice = catch_advice,
                 em_full = em_full))
   } else {
     return(list(om = om, 
@@ -694,6 +538,7 @@ loop_through_fn = function(om,
                 adrep.se  = adrep.se,
                 opt_list  = opt_list, 
                 converge_list = converge_list, 
+                catch_advice = catch_advice,
                 em_full = list()))
   }
 }
