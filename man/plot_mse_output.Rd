@@ -4,7 +4,14 @@
 \alias{plot_mse_output}
 \title{Plot performance metrics for one realization using different management strategies}
 \usage{
-plot_mse_output(mods, main.dir = getwd(), use.n.years = 10, dpi = 150)
+plot_mse_output(
+  mods,
+  main.dir = getwd(),
+  use.n.years = 10,
+  base.mod = 4,
+  do.short.term = list(first.n.years = 3, year_start = 1973, year_end = 2022),
+  dpi = 150
+)
 }
 \arguments{
 \item{mods}{A list of models}
@@ -12,6 +19,15 @@ plot_mse_output(mods, main.dir = getwd(), use.n.years = 10, dpi = 150)
 \item{main.dir}{Path to save the final report}
 
 \item{use.n.years}{Number of years that is used to summarize statistics}
+
+\item{base.mod}{Base model used to calculate relative difference in model performance (default = 4)}
+
+\item{do.short.term}{A list of information used to summarize performance over the fist n years
+\describe{
+  \item{\code{$first.n.years}}{integer, number of first years to include in results. Default = 3.}
+  \item{\code{$year_start}}{integer, first year of the burn-in period. Default = 1973.}
+  \item{\code{$year_end}}{integer, last year of the burn-in period. Default = 2022.}
+}}
 
 \item{dpi}{Resolution (number of dots per inches)}
 }

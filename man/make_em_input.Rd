@@ -5,7 +5,7 @@
 \title{Generate input data for the assessment model}
 \usage{
 make_em_input(
-  om,
+  om = NULL,
   M_em = NULL,
   sel_em = NULL,
   NAA_re_em = NULL,

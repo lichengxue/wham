@@ -254,7 +254,6 @@ generate_basic_info <- function(n_stocks = 2,
   
   basic_info$index_info = index_info
   
-  basic_info$spawn_seasons = rep(1,n_stocks)
   for(s in 1:n_stocks) {
     int_starts = cumsum(c(0,basic_info$fracyr_seasons))
     ind <- max(which(int_starts <= fracyr_spawn))

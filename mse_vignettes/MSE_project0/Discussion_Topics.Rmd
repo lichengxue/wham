@@ -1,0 +1,59 @@
+---
+title: "Discussion Topics"
+author: "Chengxue Li"
+date: "2024-06-10"
+output: pdf_document
+---
+
+## 1. Things that have been done after Juneau
+
+-   SPASAM or multi-wham MSE package
+    -   Capabilities: a) simulation-estimation; b) feedback loop, 3) spatial complexities; 4) different HCRs, 5) summarize and visualize performance metrics
+-   Documentation, examples, vignettes
+-   Sensitivity analysis
+-   Movement types (only natal homing available): none, unidirectional, bidirectional
+-   Movement options: constant, varying (iid, ar1), climate-driven (not tested yet)
+-   Project 0 simulations
+
+## 2. To do list
+
+-   Other spatial Brps?
+-   Other HCRs?
+-   Internally calculate region-specific F based on region-specific catch (just started)
+-   Ontogenetic movement (just started)
+-   Density dependent movement (not done)
+-   Spatial heterogeneity (not done)
+-   Metapopulation (not done)
+-   Tagging?
+
+## 3. Problems encountered
+
+-   Convergence issues
+    -   High sigma on Rec, NAA, movement, etc
+
+    -   High observation error
+
+    -   B-H or Ricker S-R relationship
+
+    -   Multiple process errors occur at the same time (Li et al. 2024)
+
+    -   No solution for F
+
+    -   Bad initial para. values
+
+    -   long MSE years (think about even 95% in the self-test, it's possible to have convergence issue in the feedback loop across n iterations)
+
+    -   High memory demand causes R to crash particularly under parallel computing
+-   Limited computational resources
+    -   Possible solution: loaner desktops, GPU parallel computing, Azure becomes available again, other HPC/cluster?
+
+## 4. Things to consider for project 0 and 1?
+
+-   Mismatch between survey season and spawning season
+-   Difference in fleet characteristics (selectivity curve, CV, ESS, etc)
+-   Movement only for older ages
+-   Movement is time or age varying
+-   Test the potential of modeling M random effects in dealing with movement
+-   B-H S-R relationship
+-   High sigma for NAA random effects
+-   Test different Brps and HCRs?

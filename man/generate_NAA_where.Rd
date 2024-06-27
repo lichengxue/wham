@@ -11,7 +11,7 @@ generate_NAA_where(basic_info = basic_info, move.type = 2)
 
 \item{move.type}{Movement type:
 \itemize{
-  \item \code{1} unidirectional movement (default)
+  \item \code{1} unidirectional movement 
   \item \code{2} bidirectional movement (default)
   \item \code{3} no movement
   }}

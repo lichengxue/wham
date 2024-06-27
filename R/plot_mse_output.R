@@ -117,7 +117,8 @@ plot_mse_output <- function(mods, main.dir = getwd(),
         scale_colour_brewer(palette = "Set2") + 
         ggtitle("Fleet-specific F") +
         ylab("F") +
-        theme_bw()
+        theme_bw() +
+        coord_cartesian(ylim = quantile(res[[var]],c(0.25,0.75))) 
       ggsave(file.path(main.dir,sub.dir,paste0(var,".PNG")), p2, width = 10, height = 7, dpi = dpi)
       
       var = "Catch_s"
@@ -225,7 +226,7 @@ plot_mse_output <- function(mods, main.dir = getwd(),
         scale_colour_brewer(palette = "Set2") + 
         ggtitle(paste0("Fleet-specific F"," (over last ",use.n.years," years)")) +
         ylab("F") +
-        coord_cartesian(ylim = quantile(res[[var]],c(0.05,0.95))) + 
+        coord_cartesian(ylim = quantile(res[[var]],c(0.25,0.75))) + 
         theme_bw()
       ggsave(file.path(main.dir,sub.dir,paste0(var,"_last_",use.n.years,"years.PNG")), p2, width = 10, height = 7, dpi = dpi)
       
@@ -645,7 +646,7 @@ plot_mse_output <- function(mods, main.dir = getwd(),
         scale_colour_brewer(palette = "Set2") + 
         ggtitle(paste0("F/F40%"," (over last ",use.n.years," years)")) +
         ylab("F/F40%") +
-        coord_cartesian(ylim = quantile(res[[var]],c(0.05,0.95))) + 
+        coord_cartesian(ylim = quantile(res[[var]],c(0.1,0.9))) + 
         theme_bw()
       ggsave(file.path(main.dir,sub.dir,paste0("FoverF40_last_",use.n.years,"years.PNG")), p3, width = 10, height = 7, dpi = dpi)
       
@@ -686,7 +687,7 @@ plot_mse_output <- function(mods, main.dir = getwd(),
         scale_colour_brewer(palette = "Set2") + 
         ggtitle(paste0("Probability of F/F40% > 1"," (over last ",use.n.years," years)")) +
         ylab("Probability") +
-        coord_cartesian(ylim = quantile(res[[var]],c(0.05,0.95))) + 
+        coord_cartesian(ylim = quantile(res[[var]],c(0.25,0.75))) +  
         theme_bw()
       ggsave(file.path(main.dir,sub.dir,paste0("Overfishing_last_",use.n.years,"years.PNG")), p4, width = 10, height = 7, dpi = dpi)
       
@@ -968,7 +969,7 @@ plot_mse_output <- function(mods, main.dir = getwd(),
         scale_colour_brewer(palette = "Set2") + 
         ggtitle(paste0("Fleet-specific F"," (over last ",use.n.years," years)")) +
         ylab("Relative Difference") +
-        coord_cartesian(ylim = quantile(res[[var]],c(0.05,0.95))) + 
+        coord_cartesian(ylim = quantile(res[[var]],c(0.25,0.75))) + 
         theme_bw()
       ggsave(file.path(main.dir,sub.dir,paste0(var,"_last_",use.n.years,"years_bias.PNG")), p2, width = 10, height = 7, dpi = dpi)
       
@@ -1311,7 +1312,7 @@ plot_mse_output <- function(mods, main.dir = getwd(),
         scale_colour_brewer(palette = "Set2") + 
         ggtitle(paste0("Fleet-specific F"," (over first ",first.n.years," years)")) +
         ylab("Relative Difference") +
-        coord_cartesian(ylim = quantile(res[[var]],c(0.05,0.95))) + 
+        coord_cartesian(ylim = quantile(res[[var]],c(0.25,0.75))) + 
         theme_bw()
       ggsave(file.path(main.dir,sub.dir,paste0(var,"_first_",first.n.years,"years_bias.PNG")), p2, width = 10, height = 7, dpi = dpi)
       

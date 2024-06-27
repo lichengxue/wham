@@ -15,7 +15,7 @@ loop_through_fn(
   M_em,
   sel_em,
   NAA_re_em,
-  move_em = NULL,
+  move_em,
   em.opt = NULL,
   age_comp_em = "multinomial",
   assess_years = NULL,

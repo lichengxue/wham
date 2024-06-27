@@ -70,9 +70,13 @@ generate_move <- function(basic_info = basic_info,
     move = list(stock_move = tmp, separable = sep_move) # stock1 moves, stock2 doesn't
     move$must_move = array(0,dim = c(n_stocks,n_seasons,n_regions))
     move$can_move = array(0, dim = c(n_stocks,n_seasons,n_regions,n_regions))
-    move$must_move[1,spawntime,which(1:n_regions != 1)] <- 1 # 1st element means stock # and 3rd element means region #
+    if(length(spawntime-1) == 0) stop("spawntime cannot be the first season!")
+    move$must_move[1,spawntime-1,which(1:n_regions != 1)] <- 1 # 1st element means stock # and 3rd element means region #
     move$can_move[1,movetime,,] <- 1 #only north stock can move and in seasons prior to spawning and after spawning
     move$can_move[1,spawntime,which(1:n_regions != 1),] <- 1 #north stock can (and must) move in last season prior to spawning back to north 
+    move$can_move[,spawntime,,] = 0
+    move$can_move[1,spawntime-1,1,] = 0
+    move$can_move[1,spawntime-1,2,] = 1
     move$mean_vals <- array(move_mu, dim = c(n_stocks,n_seasons,n_regions,n_regions-1))
     
     if (move.re == "constant") {
@@ -161,15 +165,16 @@ generate_move <- function(basic_info = basic_info,
     move_mu[1] = move.rate
     tmp = c(rep(TRUE,n_stocks)) 
     cat(paste0("All stocks 'can' move (default) \n"))
-    cat(paste0("\nMovement rate for stock 1 is ",move.rate,"\n","\nMovement rate for the other stocks is 0.1\n")) 
+    cat(paste0("\nMovement rate for stocks in region 1 is ",move.rate,"\n","\nMovement rate for stocks in other regions is 0.1\n")) 
     move = list(stock_move = tmp, separable = sep_move) # stock 1 and 2 both move
     move$must_move = array(0,dim = c(n_stocks,n_seasons,n_regions))
     move$can_move = array(0, dim = c(n_stocks,n_seasons,n_regions,n_regions))
     
     for (s in 1:n_stocks) {
-      move$must_move[s,spawntime,which(1:n_regions != s)] <- 1
+      if(length(spawntime-1) == 0) stop("spawntime cannot be the first season!")
+      move$must_move[s,spawntime-1,which(1:n_regions != s)] <- 1
       move$can_move[s,movetime,,] <- 1
-      move$can_move[s,spawntime,which(1:n_regions != s),] <- 1
+      move$can_move[s,spawntime-1,s,] <- 0
     }
     
     move$mean_vals <- array(0, dim = c(n_stocks,n_seasons,n_regions,n_regions-1))
