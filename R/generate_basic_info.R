@@ -154,7 +154,12 @@ generate_basic_info <- function(n_stocks = 2,
       }
     }
   }
-  if(n_feedback_years>0) F <- rbind(F, F[rep(nby, n_feedback_years),, drop = F])
+  
+  if(n_feedback_years>0) {
+    if(n_fleets > 1) F <- rbind(F, F[rep(nby, n_feedback_years),, drop = F])
+    else F <- rbind(F, matrix(F[rep(nby, n_feedback_years)],ncol = 1))
+  }
+
   basic_info$F_opts = list(F = F, F_config = 2)
   
   if(is.null(Fbar_ages)) {

@@ -197,7 +197,7 @@ generate_move <- function(basic_info = basic_info,
       }
       
       if (move.re == "ar1_a"){
-        ("\nMovement is treated to be autocorrelated by ages\n") 
+        cat("\nMovement is treated to be autocorrelated by ages\n") 
         move$use_prior <- array(0, dim = c(n_stocks,n_seasons,n_regions,n_regions-1))
         move$use_prior[1:n_stocks,1,1:n_stocks,1] <- 1
         move$prior_sigma <- array(0.2, dim = c(n_stocks,n_seasons,n_regions,n_regions-1))
