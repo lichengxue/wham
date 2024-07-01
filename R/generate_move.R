@@ -76,7 +76,7 @@ generate_move <- function(basic_info = basic_info,
     move$can_move[1,spawntime,which(1:n_regions != 1),] <- 1 #north stock can (and must) move in last season prior to spawning back to north 
     move$can_move[,spawntime,,] = 0
     move$can_move[1,spawntime-1,1,] = 0
-    move$can_move[1,spawntime-1,2,] = 1
+    move$can_move[1,spawntime-1,which(1:n_regions != 1),] = 1
     move$mean_vals <- array(move_mu, dim = c(n_stocks,n_seasons,n_regions,n_regions-1))
     
     if (move.re == "constant") {
