@@ -450,6 +450,28 @@ set_basic_info <- function(input, basic_info){
 	}
   if(!is.null(basic_info$XSPR_R_avg_yrs)) input$data$XSPR_R_avg_yrs <- basic_info$XSPR_R_avg_yrs - 1 #user input shifted to start @ 0
 
+  # === CHENG'S MODIFICATION: Add movement options ===
+  # Date: 2025-06-17
+  
+  # --------------------------------------------------------------- #
+  # --- Movement dynamics and ontogeny ---
+  input$data$move_dyn         <- basic_info$move_dyn         # Flag: dynamic movement structure
+  input$data$onto_move        <- basic_info$onto_move        # Flag: ontogenetic movement applied
+  input$data$onto_move_pars   <- basic_info$onto_move_pars   # Parameters for ontogenetic movement (e.g. logistic)
+  
+  # --- Age-specific recruitment deviations ---
+  input$data$age_mu_devs      <- basic_info$age_mu_devs      # Age-specific deviations in mean recruitment
+  
+  # --- Trend in recruitment (random effects) ---
+  input$data$apply_re_trend   <- basic_info$apply_re_trend   # Flag to apply trend in RE
+  input$data$trend_re_rate    <- basic_info$trend_re_rate    # Rate of trend in random effects (e.g. slope)
+  
+  # --- Trend in recruitment mean (non-random) ---
+  input$data$apply_mu_trend   <- basic_info$apply_mu_trend   # Flag to apply trend in mean recruitment
+  input$data$trend_mu_rate    <- basic_info$trend_mu_rate    # Rate of trend in mean recruitment
+  
+  # --------------------------------------------------------------- #
+  
 	input$options$basic_info <- basic_info
   return(input)
 

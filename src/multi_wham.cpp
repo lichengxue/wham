@@ -136,6 +136,28 @@ Type objective_function<Type>::operator() ()
   // 15 = differ by stock, season, year (n_stocks x n_seasons fixed effects, n_years random effects for r,rr)
   // 16 = differ by stock, season, age,year (n_stocks x n_seasons fixed effects, n_years x n_ages random effects for r,rr)
 
+  /******************************************************************************
+ * Cheng's Code: More Flexible Movement Dynamics in Movement Modeling (Date: 2025-06-17)
+ * ----------------------------------------------------------------------------
+  ******************************************************************************/
+
+  // Ontogenetic Movement (Age-specific movement patterns)
+  // 1 = increasing logistic, 2 = decreasing logistic, 3 = double-logistic, 4 = user-specified
+  DATA_ARRAY(onto_move);       // [n_stocks x n_regions x (n_regions - 1)]
+  DATA_ARRAY(onto_move_pars);  // [n_stocks x n_regions x (n_regions - 1) x n_pars=4]
+  DATA_ARRAY(age_mu_devs);     // [n_stocks x n_regions x (n_regions - 1) x n_ages], only used if onto_move type == 4
+
+  // Trend in movement random effects (mu_re)
+  DATA_INTEGER(apply_re_trend);   // 0/1 flag to apply linear trend to mu_re
+  DATA_ARRAY(trend_re_rate);     // Scalar slope for linear trend in mu_re (applied as: + rate * year)
+
+  // Trend in mean movement rates (trans_mu)
+  DATA_INTEGER(apply_mu_trend);   // 0/1 flag to apply linear trend to trans_mu
+  DATA_ARRAY(trend_mu_rate);     // Scalar slope for linear trend in trans_mu (applied as: + rate * year)
+
+  // Movement dynamics type: 0 = natal homing only, 1 = more flexible movemnt dynamics (metapopulation, spatial heterogeneity)
+  DATA_INTEGER(move_dyn); // movement dynamics
+
   DATA_IVECTOR(which_F_age); // (n_years_model + n_years_proj); age for which F to use for max Fmsy/Fxspr calculations and projections
   DATA_INTEGER(bias_correct_pe); //bias correct lognormal process error?
   DATA_INTEGER(bias_correct_oe); //bias correct lognormal observation error?
@@ -661,10 +683,32 @@ Type objective_function<Type>::operator() ()
       mu_re = simulate_mu_re(mu_repars, mu_re, mu_model, can_move, years_use);
       REPORT(mu_re);
     }
+    SIMULATE if(do_simulate_mu_re){
+      if(apply_re_trend == 1){
+        mu_re = simulate_mu_re(mu_repars, mu_re, mu_model, can_move, years_use,
+        apply_re_trend, trend_re_rate);
+      } else {
+        mu_re = simulate_mu_re(mu_repars, mu_re, mu_model, can_move, years_use); // default: no trend
+      }
+      REPORT(mu_re);
+    }
     if(do_post_samp_mu) ADREPORT(mu_re);
   }
-    
-  array<Type> trans_mu_base = get_trans_mu_base(trans_mu, mu_re, mu_prior_re, use_mu_prior, mu_model, Ecov_lm_mu, Ecov_how_mu);
+
+  /******************************************************************************
+ * Cheng's Code: More Flexible Movement Dynamics in Movement Modeling (Date: 2025-06-17)
+ * ----------------------------------------------------------------------------
+  ******************************************************************************/
+  array<Type> trans_mu_base;  
+  if (onto_move.sum() > 0 || apply_mu_trend == 1) {
+    // Use extended version if ontogenetic movement or movement trend is applied
+    trans_mu_base = get_trans_mu_base(trans_mu, mu_re, mu_prior_re, use_mu_prior, mu_model, Ecov_lm_mu, Ecov_how_mu, 
+    onto_move, onto_move_pars, age_mu_devs, mig_type, apply_mu_trend, trend_mu_rate);
+  } else {
+    // Use simpler version if no age-based or trend movement
+    trans_mu_base = get_trans_mu_base(trans_mu, mu_re, mu_prior_re, use_mu_prior, mu_model, Ecov_lm_mu, Ecov_how_mu);
+  }
+  
   REPORT(trans_mu_base);
   //n_stocks x n_ages x n_seasons x n_years_pop x n_regions x n_regions - 1
   //rows sum to 1 for mig_type = 0 (prob move), rows sum to 0 for mig_type 1 (instantaneous)
@@ -743,9 +787,15 @@ Type objective_function<Type>::operator() ()
   REPORT(pred_N1);
 
   //should work for SCAA and RE models
+  // array<Type> all_NAA = get_all_NAA(NAA_re_model, N1_model, N1, N1_repars, log_NAA, NAA_where, 
+   //  mature_all, waa_ssb, recruit_model, mean_rec_pars, log_SR_a, log_SR_b, 
+   //  Ecov_how_R, Ecov_lm_R, spawn_regions,  annual_Ps, annual_SAA_spawn, n_years_model,0); //log_NAA should be mapped accordingly to exclude NAA=0 e.g., recruitment by region.
+  
+  // === CHENG'S MODIFICATION ===
+  // Date: 2025-06-17
   array<Type> all_NAA = get_all_NAA(NAA_re_model, N1_model, N1, N1_repars, log_NAA, NAA_where, 
    mature_all, waa_ssb, recruit_model, mean_rec_pars, log_SR_a, log_SR_b, 
-   Ecov_how_R, Ecov_lm_R, spawn_regions,  annual_Ps, annual_SAA_spawn, n_years_model,0); //log_NAA should be mapped accordingly to exclude NAA=0 e.g., recruitment by region.
+   Ecov_how_R, Ecov_lm_R, spawn_regions,  annual_Ps, annual_SAA_spawn, n_years_model,0, move_dyn); //log_NAA should be mapped accordingly to exclude NAA=0 e.g., recruitment by region.
   array<Type> all_NAA_1 = all_NAA;
   REPORT(all_NAA_1);
   array<Type> NAA = extract_NAA(all_NAA);
@@ -788,10 +838,17 @@ Type objective_function<Type>::operator() ()
       // see("yproj");
       // see(y);
       // see(annual_Ps.dim);
+      // all_NAA = update_all_NAA(y, all_NAA, NAA_re_model, N1_model, N1, N1_repars, log_NAA, NAA_where, 
+        // mature_all, waa_ssb, recruit_model, mean_rec_pars, log_SR_a, log_SR_b, 
+        // Ecov_how_R, Ecov_lm_R, spawn_regions,  annual_Ps, annual_SAA_spawn, n_years_model, logR_proj, proj_R_opt, R_XSPR, bias_correct_pe, 
+        // marg_NAA_sigma, trace);
+
+      // === CHENG'S MODIFICATION ===
+      // Date: 2025-06-17  
       all_NAA = update_all_NAA(y, all_NAA, NAA_re_model, N1_model, N1, N1_repars, log_NAA, NAA_where, 
         mature_all, waa_ssb, recruit_model, mean_rec_pars, log_SR_a, log_SR_b, 
         Ecov_how_R, Ecov_lm_R, spawn_regions,  annual_Ps, annual_SAA_spawn, n_years_model, logR_proj, proj_R_opt, R_XSPR, bias_correct_pe, 
-        marg_NAA_sigma, trace);
+        marg_NAA_sigma, trace, move_dyn);
 
       NAA = extract_NAA(all_NAA);
       R_XSPR = get_RXSPR(all_NAA, spawn_regions, n_years_model, n_years_proj, XSPR_R_opt, XSPR_R_avg_yrs, marg_NAA_sigma);
@@ -850,11 +907,19 @@ Type objective_function<Type>::operator() ()
     array<Type> NAA_devs_2 = NAA_devs_sim;
     REPORT(NAA_devs_2);
     //repopulate log_NAA, NAA, pred_NAA, SSB,etc.
+    // log_NAA = get_simulated_log_NAA(N1_model, N1, N1_repars, NAA_re_model, NAA_devs_sim, log_NAA, NAA_where, recruit_model, mean_rec_pars,
+      // log_SR_a, log_SR_b, Ecov_how_R, Ecov_lm_R, spawn_regions, annual_Ps, annual_SAA_spawn, waa_ssb, mature_all, n_years_model, logR_proj);
+    // all_NAA = get_all_NAA(NAA_re_model, N1_model, N1, N1_repars, log_NAA, NAA_where, 
+      // mature_all, waa_ssb, recruit_model, mean_rec_pars, log_SR_a, log_SR_b, 
+      // Ecov_how_R, Ecov_lm_R, spawn_regions,  annual_Ps, annual_SAA_spawn, n_years_model,trace);
+    
+    // === CHENG'S MODIFICATION ===
+    // Date: 2025-06-17
     log_NAA = get_simulated_log_NAA(N1_model, N1, N1_repars, NAA_re_model, NAA_devs_sim, log_NAA, NAA_where, recruit_model, mean_rec_pars,
-      log_SR_a, log_SR_b, Ecov_how_R, Ecov_lm_R, spawn_regions, annual_Ps, annual_SAA_spawn, waa_ssb, mature_all, n_years_model, logR_proj);
+      log_SR_a, log_SR_b, Ecov_how_R, Ecov_lm_R, spawn_regions, annual_Ps, annual_SAA_spawn, waa_ssb, mature_all, n_years_model, logR_proj, move_dyn);
     all_NAA = get_all_NAA(NAA_re_model, N1_model, N1, N1_repars, log_NAA, NAA_where, 
       mature_all, waa_ssb, recruit_model, mean_rec_pars, log_SR_a, log_SR_b, 
-      Ecov_how_R, Ecov_lm_R, spawn_regions,  annual_Ps, annual_SAA_spawn, n_years_model,trace);
+      Ecov_how_R, Ecov_lm_R, spawn_regions,  annual_Ps, annual_SAA_spawn, n_years_model,trace, move_dyn);
     R_XSPR = get_RXSPR(all_NAA, spawn_regions, n_years_model, n_years_proj, XSPR_R_opt, XSPR_R_avg_yrs, marg_NAA_sigma);
     
     array<Type> all_NAA_3 = all_NAA;
@@ -863,12 +928,21 @@ Type objective_function<Type>::operator() ()
     if(n_years_proj > 0){
 
       for(int y = n_years_model; y < n_years_pop; y++){
+        // log_NAA = get_simulated_log_NAA(N1_model, N1, N1_repars, NAA_re_model, NAA_devs_sim, log_NAA, NAA_where, recruit_model, mean_rec_pars,
+          // log_SR_a, log_SR_b, Ecov_how_R, Ecov_lm_R, spawn_regions, annual_Ps, annual_SAA_spawn, waa_ssb, mature_all, n_years_model, logR_proj);
+        // all_NAA = update_all_NAA(y, all_NAA, NAA_re_model, N1_model, N1, N1_repars, log_NAA, NAA_where, 
+          // mature_all, waa_ssb, recruit_model, mean_rec_pars, log_SR_a, log_SR_b, 
+          // Ecov_how_R, Ecov_lm_R, spawn_regions,  annual_Ps, annual_SAA_spawn, n_years_model, logR_proj, proj_R_opt, R_XSPR, bias_correct_pe, 
+          // marg_NAA_sigma, trace);
+        
+        // === CHENG'S MODIFICATION ===
+        // Date: 2025-06-17
         log_NAA = get_simulated_log_NAA(N1_model, N1, N1_repars, NAA_re_model, NAA_devs_sim, log_NAA, NAA_where, recruit_model, mean_rec_pars,
-          log_SR_a, log_SR_b, Ecov_how_R, Ecov_lm_R, spawn_regions, annual_Ps, annual_SAA_spawn, waa_ssb, mature_all, n_years_model, logR_proj);
+          log_SR_a, log_SR_b, Ecov_how_R, Ecov_lm_R, spawn_regions, annual_Ps, annual_SAA_spawn, waa_ssb, mature_all, n_years_model, logR_proj, move_dyn);
         all_NAA = update_all_NAA(y, all_NAA, NAA_re_model, N1_model, N1, N1_repars, log_NAA, NAA_where, 
           mature_all, waa_ssb, recruit_model, mean_rec_pars, log_SR_a, log_SR_b, 
           Ecov_how_R, Ecov_lm_R, spawn_regions,  annual_Ps, annual_SAA_spawn, n_years_model, logR_proj, proj_R_opt, R_XSPR, bias_correct_pe, 
-          marg_NAA_sigma, trace);
+          marg_NAA_sigma, trace, move_dyn);
           
         R_XSPR = get_RXSPR(all_NAA, spawn_regions, n_years_model, n_years_proj, XSPR_R_opt, XSPR_R_avg_yrs, marg_NAA_sigma);
         NAA = extract_NAA(all_NAA);
@@ -915,7 +989,11 @@ Type objective_function<Type>::operator() ()
   REPORT(fracyr_SSB_all);
 
   //Now get annual NAA at spawning and SSB.
-  array<Type> NAA_spawn = get_NAA_spawn(NAA, annual_SAA_spawn, spawn_regions);
+  // array<Type> NAA_spawn = get_NAA_spawn(NAA, annual_SAA_spawn, spawn_regions);
+  
+  // === CHENG'S MODIFICATION ===
+  // Date: 2025-06-17  
+  array<Type> NAA_spawn = get_NAA_spawn(NAA, annual_SAA_spawn, spawn_regions, move_dyn);
   REPORT(NAA_spawn);
   matrix<Type> SSB = get_SSB(NAA_spawn,waa_ssb,mature_all);
   REPORT(SSB);
