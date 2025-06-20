@@ -155,7 +155,7 @@ Type objective_function<Type>::operator() ()
   DATA_INTEGER(apply_mu_trend);   // 0/1 flag to apply linear trend to trans_mu
   DATA_ARRAY(trend_mu_rate);     // Scalar slope for linear trend in trans_mu (applied as: + rate * year)
 
-  // Movement dynamics type: 0 = natal homing only, 1 = more flexible movemnt dynamics (metapopulation, spatial heterogeneity)
+  // Movement dynamics type: 0 = natal homing only, 1 = more flexible movement dynamics (meta population, spatial heterogeneity)
   DATA_INTEGER(move_dyn); // movement dynamics
 
   DATA_IVECTOR(which_F_age); // (n_years_model + n_years_proj); age for which F to use for max Fmsy/Fxspr calculations and projections

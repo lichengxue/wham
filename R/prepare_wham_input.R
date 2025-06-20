@@ -454,21 +454,72 @@ set_basic_info <- function(input, basic_info){
   # Date: 2025-06-17
   
   # --------------------------------------------------------------- #
-  # --- Movement dynamics and ontogeny ---
-  input$data$move_dyn         <- basic_info$move_dyn         # Flag: dynamic movement structure
-  input$data$onto_move        <- basic_info$onto_move        # Flag: ontogenetic movement applied
-  input$data$onto_move_pars   <- basic_info$onto_move_pars   # Parameters for ontogenetic movement (e.g. logistic)
   
-  # --- Age-specific recruitment deviations ---
-  input$data$age_mu_devs      <- basic_info$age_mu_devs      # Age-specific deviations in mean recruitment
+  # 1. Movement dynamics flag
+  if (!is.null(basic_info$move_dyn)) {
+    input$data$move_dyn <- basic_info$move_dyn
+  } else {
+    input$data$move_dyn <- 0L
+  }
   
-  # --- Trend in recruitment (random effects) ---
-  input$data$apply_re_trend   <- basic_info$apply_re_trend   # Flag to apply trend in RE
-  input$data$trend_re_rate    <- basic_info$trend_re_rate    # Rate of trend in random effects (e.g. slope)
+  # 2. Ontogenetic movement type
+  if (!is.null(basic_info$onto_move)) {
+    input$data$onto_move <- basic_info$onto_move
+  } else {
+    input$data$onto_move <- array(0L, dim = c(n_stocks, n_regions, n_regions - 1))
+  }
   
-  # --- Trend in recruitment mean (non-random) ---
-  input$data$apply_mu_trend   <- basic_info$apply_mu_trend   # Flag to apply trend in mean recruitment
-  input$data$trend_mu_rate    <- basic_info$trend_mu_rate    # Rate of trend in mean recruitment
+  # onto_move_pars required if any onto_move > 0
+  if (sum(input$data$onto_move) > 0) {
+    if (is.null(basic_info$onto_move_pars)) {
+      stop("Error: 'onto_move' > 0, but 'onto_move_pars' is not provided in basic_info.")
+    }
+    input$data$onto_move_pars <- basic_info$onto_move_pars
+  } else {
+    input$data$onto_move_pars <- array(0.0, dim = c(n_stocks, n_regions, n_regions - 1, 4))
+  }
+  
+  # age_mu_devs required if any onto_move == 4
+  if (any(input$data$onto_move == 4)) {
+    if (is.null(basic_info$age_mu_devs)) {
+      stop("Error: 'onto_move' includes type 4 (user-defined), but 'age_mu_devs' is missing.")
+    }
+    input$data$age_mu_devs <- basic_info$age_mu_devs
+  } else {
+    input$data$age_mu_devs <- array(0.0, dim = c(n_stocks, n_regions, n_regions - 1, n_ages))
+  }
+  
+  # 3. Trend in movement random effects
+  if (!is.null(basic_info$apply_re_trend)) {
+    input$data$apply_re_trend <- basic_info$apply_re_trend
+  } else {
+    input$data$apply_re_trend <- 0L
+  }
+  
+  if (input$data$apply_re_trend == 1) {
+    if (is.null(basic_info$trend_re_rate)) {
+      stop("Error: 'apply_re_trend' == 1, but 'trend_re_rate' is not provided.")
+    }
+    input$data$trend_re_rate <- basic_info$trend_re_rate
+  } else {
+    input$data$trend_re_rate <- array(0.0, dim = c(n_stocks, n_ages, n_seasons, n_regions, n_regions - 1))
+  }
+  
+  # 4. Trend in movement mean (trans_mu)
+  if (!is.null(basic_info$apply_mu_trend)) {
+    input$data$apply_mu_trend <- basic_info$apply_mu_trend
+  } else {
+    input$data$apply_mu_trend <- 0L
+  }
+  
+  if (input$data$apply_mu_trend == 1) {
+    if (is.null(basic_info$trend_mu_rate)) {
+      stop("Error: 'apply_mu_trend' == 1, but 'trend_mu_rate' is not provided.")
+    }
+    input$data$trend_mu_rate <- basic_info$trend_mu_rate
+  } else {
+    input$data$trend_mu_rate <- array(0.0, dim = c(n_stocks, n_ages, n_seasons, n_regions, n_regions - 1))
+  }
   
   # --------------------------------------------------------------- #
   

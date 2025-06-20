@@ -680,7 +680,7 @@ vector<Type> additive_ln_transform(vector<Type> x, int region, vector<int> can_m
     s: stock index
     r: source region
     rr: destination region (r != rr)
-    age_mu_devs: required if type 5 is used
+    age_mu_devs: required if type 4 is used
    */
  
    Type mu_devs = 0.0;
