@@ -684,55 +684,108 @@ vector<Type> additive_ln_transform(vector<Type> x, int region, vector<int> can_m
    */
  
    Type mu_devs = 0.0;
-   int move_type = CppAD::Integer(onto_move(s, r, rr));
- 
-   if (move_type == 4 && age_mu_devs.size() == 0) {
-     error("age_mu_devs must be provided for onto_move_type == 4 (user-specified movement)");
+   // int move_type = CppAD::Integer(onto_move(s, r, rr));
+   Type onto_move_type = static_cast<Type>(onto_move(s, r, rr));
+   
+   if (onto_move_type == 4 && age_mu_devs.size() == 0) {
+     int n_stocks = onto_move.dim(0);
+     int n_regions = onto_move.dim(1);
+     array<Type> age_mu_devs_tmp(n_stocks, n_regions, n_regions-1, n_ages);
+     age_mu_devs_tmp.setZero();
+     age_mu_devs = age_mu_devs_tmp;
    }
- 
-   if (move_type == 1) {
-     // Increasing logistic
+   
+   if (onto_move_type == 1) {
      Type a_max = n_ages - 1;
+     Type a50 = onto_move_pars(s, r, rr, 0);  // Include rr
+     Type k = onto_move_pars(s, r, rr, 1);    // Include rr
+     Type logit_val = 1.0 / (1.0 + exp(-(a - a50) / k));
+     logit_val /= (1.0 / (1.0 + exp(-(a_max - a50) / k)));
+     mu_devs = logit_val;
+   }
+   
+   if (onto_move_type == 2) {
      Type a50 = onto_move_pars(s, r, rr, 0);
      Type k = onto_move_pars(s, r, rr, 1);
-     Type scaled_val = 1.0 / (1.0 + exp(-(a - a50) / k));
-     scaled_val /= (1.0 / (1.0 + exp(-(a_max - a50) / k)));
-     mu_devs = scaled_val;
+     Type logit_val = 1.0 / (1.0 + exp(-(a - a50) / k));
+     logit_val = 1.0 - logit_val;
+     logit_val /= (1.0 - (1.0 / (1.0 + exp(-(0 - a50) / k))));
+     mu_devs = logit_val;
    }
- 
-   if (move_type == 2) {
-     // Decreasing logistic
-     Type a50 = onto_move_pars(s, r, rr, 0);
-     Type k = onto_move_pars(s, r, rr, 1);
-     Type scaled_val = 1.0 - (1.0 / (1.0 + exp(-(a - a50) / k)));
-     scaled_val /= (1.0 - (1.0 / (1.0 + exp(-(0.0 - a50) / k))));
-     mu_devs = scaled_val;
-   }
- 
-   if (move_type == 3) {
-     // Double-logistic
+   
+   if (onto_move_type == 3) {
      Type a50_1 = onto_move_pars(s, r, rr, 0);
      Type k_1 = onto_move_pars(s, r, rr, 1);
      Type a50_2 = onto_move_pars(s, r, rr, 2);
      Type k_2 = onto_move_pars(s, r, rr, 3);
- 
-     Type scaled_val = 1.0 / (1.0 + exp(-(a - a50_1) / k_1)) *
-                       (1.0 / (1.0 + exp((a - a50_2) / k_2)));
- 
-     // Normalize to peak = 1
-     Type peak_val = 0.0;
+     
+     Type logit_val = 1.0 / (1.0 + exp(-(a - a50_1) / k_1));
+     logit_val *= (1.0 / (1.0 + exp((a - a50_2) / k_2)));
+     
+     Type peak_logit_val = 0.0;
+     
      for (int test_a = 0; test_a < n_ages; ++test_a) {
-       Type tmp = 1.0 / (1.0 + exp(-(test_a - a50_1) / k_1)) *
-                  (1.0 / (1.0 + exp((test_a - a50_2) / k_2)));
-       if (tmp > peak_val) peak_val = tmp;
+       Type logit_val_tmp = 1.0 / (1.0 + exp(-(test_a - a50_1) / k_1));
+       logit_val_tmp *= (1.0 / (1.0 + exp((test_a - a50_2) / k_2)));
+       if (logit_val_tmp > peak_logit_val) {
+         peak_logit_val = logit_val_tmp;
+       }
      }
-     mu_devs = scaled_val / peak_val;
+     logit_val /= peak_logit_val;
+     mu_devs = logit_val;
    }
- 
-   if (move_type == 4) {
-     // User-specified
+   
+   if (onto_move_type == 4) {
      mu_devs = age_mu_devs(s, r, rr, a);
    }
+   
+   // if (move_type == 4 && age_mu_devs.size() == 0) {
+   //   error("age_mu_devs must be provided for onto_move_type == 4 (user-specified movement)");
+   // }
+   // 
+   // if (move_type == 1) {
+   //   // Increasing logistic
+   //   Type a_max = n_ages - 1;
+   //   Type a50 = onto_move_pars(s, r, rr, 0);
+   //   Type k = onto_move_pars(s, r, rr, 1);
+   //   Type scaled_val = 1.0 / (1.0 + exp(-(a - a50) / k));
+   //   scaled_val /= (1.0 / (1.0 + exp(-(a_max - a50) / k)));
+   //   mu_devs = scaled_val;
+   // }
+   // 
+   // if (move_type == 2) {
+   //   // Decreasing logistic
+   //   Type a50 = onto_move_pars(s, r, rr, 0);
+   //   Type k = onto_move_pars(s, r, rr, 1);
+   //   Type scaled_val = 1.0 - (1.0 / (1.0 + exp(-(a - a50) / k)));
+   //   scaled_val /= (1.0 - (1.0 / (1.0 + exp(-(0.0 - a50) / k))));
+   //   mu_devs = scaled_val;
+   // }
+   // 
+   // if (move_type == 3) {
+   //   // Double-logistic
+   //   Type a50_1 = onto_move_pars(s, r, rr, 0);
+   //   Type k_1 = onto_move_pars(s, r, rr, 1);
+   //   Type a50_2 = onto_move_pars(s, r, rr, 2);
+   //   Type k_2 = onto_move_pars(s, r, rr, 3);
+   // 
+   //   Type scaled_val = 1.0 / (1.0 + exp(-(a - a50_1) / k_1)) *
+   //                     (1.0 / (1.0 + exp((a - a50_2) / k_2)));
+   // 
+   //   // Normalize to peak = 1
+   //   Type peak_val = 0.0;
+   //   for (int test_a = 0; test_a < n_ages; ++test_a) {
+   //     Type tmp = 1.0 / (1.0 + exp(-(test_a - a50_1) / k_1)) *
+   //                (1.0 / (1.0 + exp((test_a - a50_2) / k_2)));
+   //     if (tmp > peak_val) peak_val = tmp;
+   //   }
+   //   mu_devs = scaled_val / peak_val;
+   // }
+   // 
+   // if (move_type == 4) {
+   //   // User-specified
+   //   mu_devs = age_mu_devs(s, r, rr, a);
+   // }
  
    return mu_devs;
  }
