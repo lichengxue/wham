@@ -455,6 +455,10 @@ set_basic_info <- function(input, basic_info){
   
   # --------------------------------------------------------------- #
   
+  n_stocks  <- as.integer(basic_info['n_stocks'])
+  n_regions <- as.integer(basic_info['n_regions'])
+  n_seasons <- as.integer(basic_info['n_seasons'])
+  
   # 1. Movement dynamics flag
   if (!is.null(basic_info$move_dyn)) {
     input$data$move_dyn <- basic_info$move_dyn
