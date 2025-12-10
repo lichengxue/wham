@@ -297,10 +297,28 @@ prepare_wham_input <- function(asap3 = NULL, model_name="WHAM for unnamed stock"
 	#set up ecov data and parameters. Probably want to make sure to do this after set_NAA.
 	input <- set_ecov(input, ecov)
 	if(!is.null(ecov)) message("ecov done")
+	
+	# --- Ensure Gaussian T–R flags exist (default OFF) ---
+	if (is.null(input$data$use_gauss_T_rec) || length(input$data$use_gauss_T_rec) == 0L) {
+	  input$data$use_gauss_T_rec <- 0L
+	}
+	if (is.null(input$data$Ecov_rec_T_col) || length(input$data$Ecov_rec_T_col) == 0L) {
+	  input$data$Ecov_rec_T_col <- 0L
+	}
+	if (is.null(input$par$Topt_rec)) {
+	  input$par$Topt_rec <- 0    # scalar, not vector
+	}
+	if (is.null(input$par$log_width_rec)) {
+	  input$par$log_width_rec <- log(1)  # scalar
+	}
+	if (is.null(input$par$beta_T_rec)) {
+	  input$par$beta_T_rec <- 1  # scalar
+	}
+	
 	# add vector of all observations for one step ahead residuals ==========================
 	input <- set_osa_obs(input)
 	message("osa_obs done\n")
-
+	
 	# projection data will always be modified by 'prepare_projection'
 	input <- set_proj(input, proj.opts = NULL) #proj options are used later after model fit, right?
 	#message("proj")
@@ -352,182 +370,233 @@ gen.logit <- function(x, low, upp, s=1) (log((x-low)/(upp-x)))/s
 
 
 set_basic_info <- function(input, basic_info){
-	#this function adds basic_info to input
-	input$ages.lab <- paste0(1:input$data$n_ages, c(rep("",input$data$n_ages-1),"+"))
-	if(!is.null(basic_info$ages)) {
-		if(!is.integer(basic_info$ages) | length(basic_info$ages) != input$data$n_ages) stop("basic_info$ages has been specified, but it is not an integer vector or it is not = n_ages")
-		else {
-  		input$ages.lab <- paste0(basic_info$ages, c(rep("",input$data$n_ages-1),"+"))
-		}
-	}
-	input$stock_names <- paste0("stock_", 1:input$data$n_stocks)
-	if(!is.null(basic_info$stock_names)) {
-		if(length(basic_info$stock_names) == input$data$n_stocks) input$stock_names <- as.character(basic_info$stock_names)
-	}
-	input$region_names <- paste0("region_", 1:input$data$n_regions)
-	if(!is.null(basic_info$region_names)) {
-		if(length(basic_info$region_names) == input$data$n_regions) input$region_names <- as.character(basic_info$region_names)
-	}
-
+  # this function adds basic_info to input
+  
+  ## ------------------ Names and labels ------------------
+  input$ages.lab <- paste0(1:input$data$n_ages,
+                           c(rep("", input$data$n_ages - 1), "+"))
+  if (!is.null(basic_info$ages)) {
+    if (!is.integer(basic_info$ages) ||
+        length(basic_info$ages) != input$data$n_ages)
+    {
+      stop("basic_info$ages has been specified, but it is not an integer ",
+           "vector or it is not = n_ages")
+    } else {
+      input$ages.lab <- paste0(basic_info$ages,
+                               c(rep("", input$data$n_ages - 1), "+"))
+    }
+  }
+  
+  input$stock_names <- paste0("stock_", 1:input$data$n_stocks)
+  if (!is.null(basic_info$stock_names)) {
+    if (length(basic_info$stock_names) == input$data$n_stocks)
+      input$stock_names <- as.character(basic_info$stock_names)
+  }
+  
+  input$region_names <- paste0("region_", 1:input$data$n_regions)
+  if (!is.null(basic_info$region_names)) {
+    if (length(basic_info$region_names) == input$data$n_regions)
+      input$region_names <- as.character(basic_info$region_names)
+  }
+  
+  ## ------------------ Years and recruitment ------------------
   input$data$n_years_model <- length(input$years)
-	input$data$years_use <- 1:input$data$n_years_model - 1
-  #input$data$n_years_catch <- length(input$years)
-  #input$data$n_years_indices <- length(input$years)
-	input$data$recruit_model <- rep(2,input$data$n_stocks)
-  input$data$recruit_model[] <- basic_info$recruit_model #this is made from argument of the same name to prepare_wham_input
-	# if(is.null(basic_info$bias_correct_process) | is.null(basic_info$bias_correct_observation)){
-	# 	input$log$misc <- c(input$log$misc, 
-	# "NOTE: WHAM version 2.0.0 and forward by default does not bias correct any log-normal process or observation errors. To 
-	# configure these, set basic_info$bias_correct_process = TRUE and/or basic_info$bias_correct_observation = TRUE. \n")
-	# }
-  input$data$bias_correct_pe <- 0 #bias correct log-normal process errors?
-  input$data$bias_correct_oe <- 0 #bias correct log-normal observation errors?
-  input$data$bias_correct_brps <- 0 #bias correct SSB/R and Y/R when NAA re are bias-corrected?
-  if(!is.null(basic_info$bias_correct_process)) input$data$bias_correct_pe <- as.integer(basic_info$bias_correct_process)
-  if(!is.null(basic_info$bias_correct_observation)) input$data$bias_correct_oe <- as.integer(basic_info$bias_correct_observation)
-  if(!is.null(basic_info$bias_correct_BRPs)) input$data$bias_correct_brps <- as.integer(basic_info$bias_correct_BRPs)
+  input$data$years_use     <- 1:input$data$n_years_model - 1
   
-	#(NAA, M, selectivity, q, movement, unidentified mortality, q priors, movement priors, Ecov). Only used for applicable random effects.
-  sim_pe <- rep(1,9)
-  if(!is.null(basic_info$simulate_process_error)) sim_pe[] <- as.integer(basic_info$simulate_process_error)
-  sim_oe <- rep(1,3)
-  if(!is.null(basic_info$simulate_observation_error)) sim_oe[] <- as.integer(basic_info$simulate_observation_error)
-
-  input$data$do_simulate_N_re <- sim_pe[1] #simulate state variable
-  input$data$do_simulate_M_re <- sim_pe[2] #simulate state variable
-  input$data$do_simulate_sel_re <- sim_pe[3] #simulate state variable
-  input$data$do_simulate_q_re <- sim_pe[4] #simulate state variable
-  input$data$do_simulate_mu_re <- sim_pe[5] #simulate state variable
-  input$data$do_simulate_L_re <- sim_pe[6] #simulate state variable
-  input$data$do_simulate_q_prior_re <- sim_pe[7] #simulate state variable
-  input$data$do_simulate_mu_prior_re <- sim_pe[8] #simulate state variable
-  input$data$do_simulate_Ecov_re <- sim_pe[9] #simulate state variable
-  input$data$do_simulate_data <-  sim_oe #simulate data types (catch, indices, Ecov)
-  input$data$do_simulate_period <- c(1,1) #simulate processes and/or observations in model, projection periods
-	input$data$do_post_samp_N <- 0 #this will be changed in fit_wham when a sample of posterior process residuals are to be calculated
-	input$data$do_post_samp_M <- 0 #this will be changed in fit_wham when a sample of posterior process residuals are to be calculated
-	input$data$do_post_samp_mu <- 0 #this will be changed in fit_wham when a sample of posterior process residuals are to be calculated
-	input$data$do_post_samp_q <- 0 #this will be changed in fit_wham when a sample of posterior process residuals are to be calculated
-	input$data$do_post_samp_sel <- 0 #this will be changed in fit_wham when a sample of posterior process residuals are to be calculated
-	input$data$do_post_samp_Ecov <- 0 #this will be changed in fit_wham when a sample of posterior process residuals are to be calculated
-
-  #input$data$simulate_period <- rep(1,2) #simulate above items for (model years, projection years)
-	input$data$do_SPR_BRPs <- 0 #this will be changed when after model fit
-	input$data$do_MSY_BRPs <- 0 #this will be changed when after model fit
-	input$data$SPR_weight_type <- 0
-	input$data$SPR_weights <- rep(1/input$data$n_stocks, input$data$n_stocks)
-	input$data$n_regions_is_small <- 1
-	input$data$use_alt_AR1 <- 0
-
-  input$data$percentSPR <- 40 #percentage of unfished SSB/R to use for SPR-based reference points
-  # input$data$percentFXSPR <- 100 # percent of F_XSPR to use for calculating catch in projections
-  # input$data$percentFMSY <- 100 # percent of F_XSPR to use for calculating catch in projections
-  # data$XSPR_R_opt = 3 #1(3): use annual R estimates(predictions) for annual SSB_XSPR, 2(4): use average R estimates(predictions). See next line for years to average over.
-  input$data$XSPR_R_opt <- 2 # default = use average R estimates
-  input$data$XSPR_R_avg_yrs <- 1:input$data$n_years_model-1 #model year indices to use for averaging recruitment when defining SSB_XSPR (if XSPR_R_opt = 2,4)
-	input$data$FXSPR_init <- rep(0.5, input$data$n_years_model) #initial value for Newton search of F (spr-based) reference point 
-	input$data$FMSY_init <- rep(0.5, input$data$n_years_model)  #initial value for Newton search of Fmsy (if a SRR is used)
-	input$data$FXSPR_static_init <- 0.5 #initial value for Newton search of static F (spr-based) reference point (inputs to spr are averages of annual values using avg_years_ind_static)
-	input$data$FMSY_static_init <- 0.5 #initial value for Newton search of static Fmsy (if a SRR is used)
-
-	# input$data$avg_years_ind <- tail(1:input$data$n_years_model,5) - 1 #default values to average FAA, M, movement, WAA, and maturity for projections (need to separate these)
-	input$data$avg_years_ind_static <- tail(1:input$data$n_years_model,5) - 1 ##default values to average FAA, M, movement, WAA, and maturity to average for static brps
-  input$data$which_F_age <- rep(input$data$n_ages,input$data$n_years_model) #plus group by default used to define full F (total) IN annual reference points for projections, only. prepare_projection changes it to properly define selectivity for projections.
-  input$data$which_F_age_static <- input$data$n_ages #plus group, fleet 1 by default used to define full F (total) for static SPR-based ref points.
-
-  if(!is.null(basic_info$FMSY_init)) input$data$FMSY_init[] <- basic_info$FMSY_init
-  if(!is.null(basic_info$FMSY_static_init)) input$data$FMSY_static_init <- basic_info$FMSY_init[1]
-  if(!is.null(basic_info$FXSPR_init)) input$data$FXSPR_init[] <- basic_info$FXSPR_init
-  if(!is.null(basic_info$FXSPR_static_init)) input$data$FXSPR_static_init <- basic_info$FXSPR_init[1]
-
-  if(!is.null(basic_info$percentSPR)) input$data$percentSPR <- basic_info$percentSPR
-  # if(!is.null(basic_info$percentFXSPR)) input$data$percentFXSPR <- basic_info$percentFXSPR
-  # if(!is.null(basic_info$percentFMSY)) input$data$percentFMSY <- basic_info$percentFMSY
-  if(!is.null(basic_info$XSPR_R_opt)) input$data$XSPR_R_opt <- basic_info$XSPR_R_opt
-	if(!is.null(basic_info$XSPR_input_average_years)) {
-		# input$data$avg_years_ind <- basic_info$XSPR_input_average_years - 1 #user input shifted to start @ 0  
-		input$data$avg_years_ind_static <- basic_info$XSPR_input_average_years - 1 #user input shifted to start @ 0  
-	}
-  if(!is.null(basic_info$XSPR_R_avg_yrs)) input$data$XSPR_R_avg_yrs <- basic_info$XSPR_R_avg_yrs - 1 #user input shifted to start @ 0
-
-  # === CHENG'S MODIFICATION: Add movement options ===
-  # Date: 2025-06-17
+  input$data$recruit_model <- rep(2, input$data$n_stocks)
+  if (!is.null(basic_info$recruit_model)) {
+    # Ensure it's a numeric / integer vector
+    input$data$recruit_model[] <- as.integer(basic_info$recruit_model)
+  }
   
-  # --------------------------------------------------------------- #
+  ## ------------------ Bias correction flags ------------------
+  input$data$bias_correct_pe   <- 0L # process
+  input$data$bias_correct_oe   <- 0L # observation
+  input$data$bias_correct_brps <- 0L # BRPs
   
-  n_stocks  <- as.integer(basic_info['n_stocks'])
-  n_regions <- as.integer(basic_info['n_regions'])
-  n_seasons <- as.integer(basic_info['n_seasons'])
+  if (!is.null(basic_info$bias_correct_process))
+    input$data$bias_correct_pe <- as.integer(basic_info$bias_correct_process)
+  if (!is.null(basic_info$bias_correct_observation))
+    input$data$bias_correct_oe <- as.integer(basic_info$bias_correct_observation)
+  if (!is.null(basic_info$bias_correct_BRPs))
+    input$data$bias_correct_brps <- as.integer(basic_info$bias_correct_BRPs)
   
-  # 1. Movement dynamics flag
+  ## ------------------ Simulation flags ------------------
+  # (NAA, M, sel, q, movement, unidentified mortality, q priors, movement priors, Ecov)
+  sim_pe <- rep(1L, 9)
+  if (!is.null(basic_info$simulate_process_error))
+    sim_pe[] <- as.integer(basic_info$simulate_process_error)
+  
+  sim_oe <- rep(1L, 3)
+  if (!is.null(basic_info$simulate_observation_error))
+    sim_oe[] <- as.integer(basic_info$simulate_observation_error)
+  
+  input$data$do_simulate_N_re       <- sim_pe[1]
+  input$data$do_simulate_M_re       <- sim_pe[2]
+  input$data$do_simulate_sel_re     <- sim_pe[3]
+  input$data$do_simulate_q_re       <- sim_pe[4]
+  input$data$do_simulate_mu_re      <- sim_pe[5]
+  input$data$do_simulate_L_re       <- sim_pe[6]
+  input$data$do_simulate_q_prior_re <- sim_pe[7]
+  input$data$do_simulate_mu_prior_re<- sim_pe[8]
+  input$data$do_simulate_Ecov_re    <- sim_pe[9]
+  
+  input$data$do_simulate_data   <- sim_oe
+  input$data$do_simulate_period <- c(1L, 1L)
+  
+  input$data$do_post_samp_N    <- 0L
+  input$data$do_post_samp_M    <- 0L
+  input$data$do_post_samp_mu   <- 0L
+  input$data$do_post_samp_q    <- 0L
+  input$data$do_post_samp_sel  <- 0L
+  input$data$do_post_samp_Ecov <- 0L
+  
+  input$data$do_SPR_BRPs   <- 0L
+  input$data$do_MSY_BRPs   <- 0L
+  input$data$SPR_weight_type <- 0L
+  input$data$SPR_weights     <- rep(1 / input$data$n_stocks,
+                                    input$data$n_stocks)
+  input$data$n_regions_is_small <- 1L
+  input$data$use_alt_AR1       <- 0L
+  
+  ## ------------------ Reference points ------------------
+  input$data$percentSPR    <- 40
+  input$data$XSPR_R_opt    <- 2L
+  input$data$XSPR_R_avg_yrs<- 1:input$data$n_years_model - 1
+  
+  input$data$FXSPR_init        <- rep(0.5, input$data$n_years_model)
+  input$data$FMSY_init         <- rep(0.5, input$data$n_years_model)
+  input$data$FXSPR_static_init <- 0.5
+  input$data$FMSY_static_init  <- 0.5
+  
+  input$data$avg_years_ind_static <- tail(1:input$data$n_years_model, 5) - 1
+  input$data$which_F_age          <- rep(input$data$n_ages,
+                                         input$data$n_years_model)
+  input$data$which_F_age_static   <- input$data$n_ages
+  
+  if (!is.null(basic_info$FMSY_init))
+    input$data$FMSY_init[] <- basic_info$FMSY_init
+  if (!is.null(basic_info$FMSY_static_init))
+    input$data$FMSY_static_init <- basic_info$FMSY_init[1]
+  
+  if (!is.null(basic_info$FXSPR_init))
+    input$data$FXSPR_init[] <- basic_info$FXSPR_init
+  if (!is.null(basic_info$FXSPR_static_init))
+    input$data$FXSPR_static_init <- basic_info$FXSPR_init[1]
+  
+  if (!is.null(basic_info$percentSPR))
+    input$data$percentSPR <- basic_info$percentSPR
+  
+  if (!is.null(basic_info$XSPR_R_opt))
+    input$data$XSPR_R_opt <- basic_info$XSPR_R_opt
+  
+  if (!is.null(basic_info$XSPR_input_average_years)) {
+    input$data$avg_years_ind_static <-
+      basic_info$XSPR_input_average_years - 1L
+  }
+  
+  if (!is.null(basic_info$XSPR_R_avg_yrs))
+    input$data$XSPR_R_avg_yrs <- basic_info$XSPR_R_avg_yrs - 1L
+  
+  ## ================== CHENG'S MODIFICATION: movement ==================
+  ## Use dimensions from input$data (always defined in WHAM)
+  n_stocks  <- as.integer(input$data$n_stocks)
+  n_regions <- as.integer(input$data$n_regions)
+  n_seasons <- as.integer(input$data$n_seasons)
+  n_ages    <- as.integer(input$data$n_ages)
+  
+  ## 1. Movement dynamics flag
   if (!is.null(basic_info$move_dyn)) {
-    input$data$move_dyn <- basic_info$move_dyn
+    input$data$move_dyn <- as.integer(basic_info$move_dyn)
   } else {
     input$data$move_dyn <- 0L
   }
   
-  # 2. Ontogenetic movement type
+  ## 2. Ontogenetic movement type (dimension: stock x from_region x to_region_group)
   if (!is.null(basic_info$onto_move)) {
     input$data$onto_move <- basic_info$onto_move
   } else {
-    input$data$onto_move <- array(0L, dim = c(n_stocks, n_regions, n_regions - 1))
+    input$data$onto_move <- array(0L,
+                                  dim = c(n_stocks,
+                                          n_regions,
+                                          max(n_regions - 1L, 1L)))
   }
   
-  # onto_move_pars required if any onto_move > 0
+  ## onto_move_pars required if any onto_move > 0
   if (sum(input$data$onto_move) > 0) {
     if (is.null(basic_info$onto_move_pars)) {
       stop("Error: 'onto_move' > 0, but 'onto_move_pars' is not provided in basic_info.")
     }
     input$data$onto_move_pars <- basic_info$onto_move_pars
   } else {
-    input$data$onto_move_pars <- array(0.0, dim = c(n_stocks, n_regions, n_regions - 1, 4))
+    input$data$onto_move_pars <- array(0.0,
+                                       dim = c(n_stocks,
+                                               n_regions,
+                                               max(n_regions - 1L, 1L),
+                                               4L)
+    )
   }
   
-  # age_mu_devs required if any onto_move == 4
-  if (any(input$data$onto_move == 4)) {
+  ## age_mu_devs required if any onto_move == 4 (user-defined)
+  if (any(input$data$onto_move == 4L)) {
     if (is.null(basic_info$age_mu_devs)) {
       stop("Error: 'onto_move' includes type 4 (user-defined), but 'age_mu_devs' is missing.")
     }
     input$data$age_mu_devs <- basic_info$age_mu_devs
   } else {
-    input$data$age_mu_devs <- array(0.0, dim = c(n_stocks, n_regions, n_regions - 1, n_ages))
+    input$data$age_mu_devs <- array(0.0,
+                                    dim = c(n_stocks,
+                                            n_regions,
+                                            max(n_regions - 1L, 1L),
+                                            n_ages)
+    )
   }
   
-  # 3. Trend in movement random effects
+  ## 3. Trend in movement random effects
   if (!is.null(basic_info$apply_re_trend)) {
-    input$data$apply_re_trend <- basic_info$apply_re_trend
+    input$data$apply_re_trend <- as.integer(basic_info$apply_re_trend)
   } else {
     input$data$apply_re_trend <- 0L
   }
   
-  if (input$data$apply_re_trend == 1) {
+  if (input$data$apply_re_trend == 1L) {
     if (is.null(basic_info$trend_re_rate)) {
       stop("Error: 'apply_re_trend' == 1, but 'trend_re_rate' is not provided.")
     }
     input$data$trend_re_rate <- basic_info$trend_re_rate
   } else {
-    input$data$trend_re_rate <- array(0.0, dim = c(n_stocks, n_ages, n_seasons, n_regions, n_regions - 1))
+    input$data$trend_re_rate <- array(0.0,
+                                      dim = c(n_stocks,
+                                              n_ages,
+                                              n_seasons,
+                                              n_regions,
+                                              max(n_regions - 1L, 1L))
+    )
   }
   
-  # 4. Trend in movement mean (trans_mu)
+  ## 4. Trend in movement mean (trans_mu)
   if (!is.null(basic_info$apply_mu_trend)) {
-    input$data$apply_mu_trend <- basic_info$apply_mu_trend
+    input$data$apply_mu_trend <- as.integer(basic_info$apply_mu_trend)
   } else {
     input$data$apply_mu_trend <- 0L
   }
   
-  if (input$data$apply_mu_trend == 1) {
+  if (input$data$apply_mu_trend == 1L) {
     if (is.null(basic_info$trend_mu_rate)) {
       stop("Error: 'apply_mu_trend' == 1, but 'trend_mu_rate' is not provided.")
     }
     input$data$trend_mu_rate <- basic_info$trend_mu_rate
   } else {
-    input$data$trend_mu_rate <- array(0.0, dim = c(n_stocks, n_ages, n_seasons, n_regions, n_regions - 1))
+    input$data$trend_mu_rate <- array(0.0,
+                                      dim = c(n_stocks,
+                                              n_ages,
+                                              n_seasons,
+                                              n_regions,
+                                              max(n_regions - 1L, 1L))
+    )
   }
+  ## ================== end movement block ==================
   
-  # --------------------------------------------------------------- #
-  
-	input$options$basic_info <- basic_info
+  input$options$basic_info <- basic_info
   return(input)
-
 }

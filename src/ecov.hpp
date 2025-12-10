@@ -229,3 +229,14 @@ matrix<Type> get_Ecov_lm(matrix<Type>Ecov_beta, matrix<Type>Ecov_out, int n_year
   return Ecov_lm;
 }
 
+// Gaussian temperature effect on log-recruitment.
+// T         : temperature (Ecov_out on original scale)
+// Topt_rec  : optimal temperature
+// log_width_rec : log of Gaussian width (on temp scale)
+template<class Type>
+Type log_T_gauss_rec(Type T, Type Topt_rec, Type log_width_rec)
+{
+  Type width = exp(log_width_rec);
+  Type z = (T - Topt_rec) / width;
+  return -Type(0.5) * z * z;
+}
