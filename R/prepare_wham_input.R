@@ -299,21 +299,52 @@ prepare_wham_input <- function(asap3 = NULL, model_name="WHAM for unnamed stock"
 	if(!is.null(ecov)) message("ecov done")
 	
 	# --- Ensure Gaussian T–R flags exist (default OFF) ---
-	if (is.null(input$data$use_gauss_T_rec) || length(input$data$use_gauss_T_rec) == 0L) {
-	  input$data$use_gauss_T_rec <- 0L
+	# if (is.null(input$data$use_gauss_T_rec) || length(input$data$use_gauss_T_rec) == 0L) {
+	#   input$data$use_gauss_T_rec <- 0L
+	# }
+	# if (is.null(input$data$Ecov_rec_T_col) || length(input$data$Ecov_rec_T_col) == 0L) {
+	#   input$data$Ecov_rec_T_col <- 0L
+	# }
+	# if (is.null(input$par$Topt_rec)) {
+	#   input$par$Topt_rec <- 0    # scalar, not vector
+	# }
+	# if (is.null(input$par$log_width_rec)) {
+	#   input$par$log_width_rec <- log(1)  # scalar
+	# }
+	# if (is.null(input$par$beta_T_rec)) {
+	#   input$par$beta_T_rec <- 1  # scalar
+	# }
+	# helper: Gaussian is active only if explicitly requested AND actually used
+	gauss_rec_active <- function(input){
+	  d <- input$data
+	  if (!isTRUE(d$use_gauss_T_rec == 1L)) return(FALSE)
+	  if (is.null(d$n_Ecov) || d$n_Ecov <= 0L) return(FALSE)
+	  if (is.null(d$Ecov_rec_T_col)) return(FALSE)
+	  if (d$Ecov_rec_T_col < 0L || d$Ecov_rec_T_col >= d$n_Ecov) return(FALSE)
+	  
+	  # only active if that Ecov column is actually linked to recruitment for ≥1 stock
+	  # NOTE: R is 1-based indexing for matrices
+	  col <- d$Ecov_rec_T_col + 1L
+	  if (is.null(d$Ecov_how_R)) return(FALSE)
+	  any(d$Ecov_how_R[col, ] > 0L)
 	}
-	if (is.null(input$data$Ecov_rec_T_col) || length(input$data$Ecov_rec_T_col) == 0L) {
-	  input$data$Ecov_rec_T_col <- 0L
+	
+	is_on <- gauss_rec_active(input)
+	
+	if(!is_on){
+	  # map out = not estimated (fixed)
+	  input$map$Topt_rec      <- factor(NA)
+	  input$map$log_width_rec <- factor(NA)
+	  
+	  # beta_T_rec can be scalar or vector depending on your C++.
+	  # safest is to map whatever you stored in par.
+	  if(length(input$par$beta_T_rec) == 1L){
+	    input$map$beta_T_rec <- factor(NA)
+	  } else {
+	    input$map$beta_T_rec <- factor(rep(NA, length(input$par$beta_T_rec)))
+	  }
 	}
-	if (is.null(input$par$Topt_rec)) {
-	  input$par$Topt_rec <- 0    # scalar, not vector
-	}
-	if (is.null(input$par$log_width_rec)) {
-	  input$par$log_width_rec <- log(1)  # scalar
-	}
-	if (is.null(input$par$beta_T_rec)) {
-	  input$par$beta_T_rec <- 1  # scalar
-	}
+	
 	
 	# add vector of all observations for one step ahead residuals ==========================
 	input <- set_osa_obs(input)

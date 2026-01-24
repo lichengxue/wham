@@ -438,12 +438,44 @@ Type objective_function<Type>::operator() ()
       for(int y = 0; y < n_years_pop; y++) for(int i = 0; i <n_Ecov; i++) Ecov_lm_R(s,y,i) = Ecov_lm_R_s(y,i);
     }
     
-    // --- Gaussian temperature effect on log-recruitment (overwrites one Ecov column) ---
+    // ---------- Safety check: Gaussian temp effect is only active when it is meaningful ----------
+    bool gauss_rec_active = false;
+    
     if(use_gauss_T_rec == 1){
+      // Must have at least 1 Ecov and a valid temperature column
+      if(n_Ecov > 0 && Ecov_rec_T_col >= 0 && Ecov_rec_T_col < n_Ecov){
+        
+        // Must actually be using Ecov for recruitment for at least one stock
+        // (otherwise Gaussian overwriting does nothing biologically)
+        int n_used = 0;
+        for(int s = 0; s < n_stocks; s++){
+          if(Ecov_how_R(Ecov_rec_T_col, s) > 0) n_used++;
+        }
+        if(n_used > 0) gauss_rec_active = true;
+      }
+    }
+    
+    // Optional: strict mode (recommended) - throw an error if user asked for Gaussian but it's not applicable
+    // if(use_gauss_T_rec == 1 && !gauss_rec_active){
+    //   error("use_gauss_T_rec=1 but Gaussian recruitment effect is not applicable: check n_Ecov, Ecov_rec_T_col, and Ecov_how_R for that Ecov column.");
+    // }
+    
+    // --- Gaussian temperature effect on log-recruitment (overwrites one Ecov column) ---
+    // if(use_gauss_T_rec == 1){
+    //   for(int s = 0; s < n_stocks; s++){
+    //     for(int y = 0; y < n_years_pop; y++){
+    //       Type T = Ecov_out_R(s, y, Ecov_rec_T_col); // temperature Ecov (on original scale)
+    //       // log_T_gauss_rec is defined in ecov.hpp
+    //       Ecov_lm_R(s, y, Ecov_rec_T_col) =
+    //         beta_T_rec(s) * log_T_gauss_rec(T, Topt_rec, log_width_rec);
+    //     }
+    //   }
+    // }
+    
+    if(gauss_rec_active){
       for(int s = 0; s < n_stocks; s++){
         for(int y = 0; y < n_years_pop; y++){
-          Type T = Ecov_out_R(s, y, Ecov_rec_T_col); // temperature Ecov (on original scale)
-          // log_T_gauss_rec is defined in ecov.hpp
+          Type T = Ecov_out_R(s, y, Ecov_rec_T_col);
           Ecov_lm_R(s, y, Ecov_rec_T_col) =
             beta_T_rec(s) * log_T_gauss_rec(T, Topt_rec, log_width_rec);
         }
