@@ -314,6 +314,36 @@ prepare_wham_input <- function(asap3 = NULL, model_name="WHAM for unnamed stock"
 	# if (is.null(input$par$beta_T_rec)) {
 	#   input$par$beta_T_rec <- 1  # scalar
 	# }
+	
+	# ------------------------------------------------------------------------------------------------
+	# Gaussian T–Recruitment effect (optional)
+	# Goal:
+	#  * Default is ALWAYS OFF (no estimation; parameters mapped out).
+	#  * If user turns it ON (use_gauss_T_rec = 1) but it is not actually applicable
+	#    (no Ecov, invalid column, or that Ecov column is not linked to recruitment), then we
+	#    automatically turn it OFF (map out + set params to NA) so the model still runs.
+	#  * If Ecov is linked to recruitment (linear/polynomial) but Gaussian is NOT requested,
+	#    we estimate the regular Ecov–recruit parameters and keep Gaussian OFF.
+	# ------------------------------------------------------------------------------------------------
+	# ensure flags exist with safe defaults
+	if (is.null(input$data$use_gauss_T_rec) || length(input$data$use_gauss_T_rec) == 0L) {
+	  input$data$use_gauss_T_rec <- 0L
+	}
+	if (is.null(input$data$Ecov_rec_T_col) || length(input$data$Ecov_rec_T_col) == 0L) {
+	  # -1 means "unset" (C++ checks for >=0)
+	  input$data$Ecov_rec_T_col <- -1L
+	}
+	# ensure parameters exist (C++ declares these even if Gaussian is off)
+	if (is.null(input$par$Topt_rec)      || length(input$par$Topt_rec)      == 0L) input$par$Topt_rec      <- NA_real_
+	if (is.null(input$par$log_width_rec) || length(input$par$log_width_rec) == 0L) input$par$log_width_rec <- NA_real_
+	if (is.null(input$par$beta_T_rec)    || length(input$par$beta_T_rec)    == 0L) {
+	  input$par$beta_T_rec <- rep(NA_real_, input$data$n_stocks)
+	}
+	# force correct length if user provided scalar
+	if (length(input$par$beta_T_rec) == 1L && input$data$n_stocks > 1L) {
+	  input$par$beta_T_rec <- rep(input$par$beta_T_rec, input$data$n_stocks)
+	}
+	
 	# helper: Gaussian is active only if explicitly requested AND actually used
 	gauss_rec_active <- function(input){
 	  d <- input$data
@@ -321,28 +351,33 @@ prepare_wham_input <- function(asap3 = NULL, model_name="WHAM for unnamed stock"
 	  if (is.null(d$n_Ecov) || d$n_Ecov <= 0L) return(FALSE)
 	  if (is.null(d$Ecov_rec_T_col)) return(FALSE)
 	  if (d$Ecov_rec_T_col < 0L || d$Ecov_rec_T_col >= d$n_Ecov) return(FALSE)
-	  
-	  # only active if that Ecov column is actually linked to recruitment for ≥1 stock
-	  # NOTE: R is 1-based indexing for matrices
-	  col <- d$Ecov_rec_T_col + 1L
 	  if (is.null(d$Ecov_how_R)) return(FALSE)
+	  # active only if that Ecov column is linked to recruitment for >= 1 stock
+	  col <- d$Ecov_rec_T_col + 1L # R is 1-based
 	  any(d$Ecov_how_R[col, ] > 0L)
 	}
 	
 	is_on <- gauss_rec_active(input)
 	
+	if(is_on){
+	  # provide safe initial values if user turned Gaussian on but didn't supply them
+	  if (is.na(input$par$Topt_rec))      input$par$Topt_rec      <- 0
+	  if (is.na(input$par$log_width_rec)) input$par$log_width_rec <- log(1)
+	  if (any(is.na(input$par$beta_T_rec))) input$par$beta_T_rec <- rep(1, input$data$n_stocks)
+	}
+	
 	if(!is_on){
-	  # map out = not estimated (fixed)
+	  # keep the flag consistent (so downstream code / reports are clear)
+	  input$data$use_gauss_T_rec <- 0L
+	  
+	  # set params to NA (not used) and map them out (not estimated)
+	  input$par$Topt_rec      <- NA_real_
+	  input$par$log_width_rec <- NA_real_
+	  input$par$beta_T_rec    <- rep(NA_real_, input$data$n_stocks)
+	  
 	  input$map$Topt_rec      <- factor(NA)
 	  input$map$log_width_rec <- factor(NA)
-	  
-	  # beta_T_rec can be scalar or vector depending on your C++.
-	  # safest is to map whatever you stored in par.
-	  if(length(input$par$beta_T_rec) == 1L){
-	    input$map$beta_T_rec <- factor(NA)
-	  } else {
-	    input$map$beta_T_rec <- factor(rep(NA, length(input$par$beta_T_rec)))
-	  }
+	  input$map$beta_T_rec    <- factor(rep(NA, length(input$par$beta_T_rec)))
 	}
 	
 	
