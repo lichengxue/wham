@@ -1569,6 +1569,7 @@ array<Type> simulate_NAA_devs(array<Type> NAA_devs, vector<int> NAA_re_model, ar
   int n_regions = NAA_devs.dim(1);
   Type NAA_rho_y = 0, NAA_rho_a = 0;
   array<Type> NAA_devs_out = NAA_devs; //(n_stocks, n_regions, n_years_pop, n_ages); //same dims as that provided by get_NAA_devs
+  NAA_devs_out.setZero();
   vector<Type> marginal_sigma(n_ages);
 
   int rho_y_ind = 1;
