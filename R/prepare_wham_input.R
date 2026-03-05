@@ -472,7 +472,7 @@ set_basic_info <- function(input, basic_info){
   input$data$recruit_model <- rep(2, input$data$n_stocks)
   if (!is.null(basic_info$recruit_model)) {
     # Ensure it's a numeric / integer vector
-    input$data$recruit_model[] <- as.integer(basic_info$recruit_model)
+    input$data$recruit_model[] <- basic_info$recruit_model
   }
   
   ## ------------------ Bias correction flags ------------------
