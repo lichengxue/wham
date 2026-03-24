@@ -401,79 +401,60 @@ Type objective_function<Type>::operator() ()
   Ecov_lm_R.setZero();
   array<Type> Ecov_out_R(n_stocks, n_years_pop, n_Ecov);
   Ecov_out_R.setZero();
-  if(Ecov_how_R.sum()>0){
+  
+  if(Ecov_how_R.sum() > 0 || use_gauss_T_rec == 1){
     for(int s = 0; s < n_stocks; s++){
       vector<int> t_ind_s = ind_Ecov_out_start_R.col(s);
       vector<int> t_ind_e = ind_Ecov_out_end_R.col(s);
-      //see(t_ind_s);
-      //see(t_ind_e);
-      matrix<Type> tmp = get_Ecov_out(Ecov_x, n_years_model, n_years_proj, t_ind_s, t_ind_e, proj_Ecov_opt, avg_years_Ecov, Ecov_use_proj);
-      //see(tmp);
-      for(int j = 0; j < tmp.rows(); j++) for(int k = 0; k < n_Ecov; k++) Ecov_out_R(s,j,k) = tmp(j,k);
+      matrix<Type> tmp = get_Ecov_out(Ecov_x, n_years_model, n_years_proj,
+                                      t_ind_s, t_ind_e, proj_Ecov_opt,
+                                      avg_years_Ecov, Ecov_use_proj);
+      for(int j = 0; j < tmp.rows(); j++) {
+        for(int k = 0; k < n_Ecov; k++) {
+          Ecov_out_R(s,j,k) = tmp(j,k);
+        }
+      }
     }
-    REPORT(Ecov_out_R); 
-    //see(Ecov_out_R);
-    int max_n_poly_R = Ecov_beta_R.dim(2); // now a 3D array dim: (n_stocks,n_Ecov,max(n_poly_Ecov_R))
-    //see(max_n_poly_R);
+    REPORT(Ecov_out_R);
+    
+    // Default recruitment Ecov effect: linear/polynomial
+    int max_n_poly_R = Ecov_beta_R.dim(2);
     for(int s = 0; s < n_stocks; s++) {
       matrix<Type> Ecov_beta_R_s(n_Ecov,max_n_poly_R);
       matrix<Type> Ecov_out_R_s(n_years_pop,n_Ecov);
       vector<int> n_poly_Ecov_R_s(n_Ecov);
       Ecov_beta_R_s.setZero();
-      for(int i = 0; i <n_Ecov; i++) {
+      
+      for(int i = 0; i < n_Ecov; i++) {
         n_poly_Ecov_R_s(i) = n_poly_Ecov_R(i,s);
-        //see(n_poly_Ecov_R_s(i));
-        //see(n_years_pop);
-        //see(Ecov_out_R.dim);
-        //see(Ecov_beta_R_s);
-        for(int y = 0; y < n_years_pop; y++) Ecov_out_R_s(y,i) = Ecov_out_R(s,y,i);
-        //see("here");
-        for(int j = 0; j < max_n_poly_R; j++) Ecov_beta_R_s(i,j) = Ecov_beta_R(s,i,j);
-      }
-      //see(n_poly_Ecov_R_s);
-      //see(Ecov_beta_R_s);
-      //see(Ecov_out_R_s);
-      //see("after");
-      matrix<Type> Ecov_lm_R_s = get_Ecov_lm(Ecov_beta_R_s,Ecov_out_R_s, n_years_model, n_years_proj, n_poly_Ecov_R_s);
-      for(int y = 0; y < n_years_pop; y++) for(int i = 0; i <n_Ecov; i++) Ecov_lm_R(s,y,i) = Ecov_lm_R_s(y,i);
-    }
-    
-    // ---------- Safety check: Gaussian temp effect is only active when it is meaningful ----------
-    bool gauss_rec_active = false;
-    
-    if(use_gauss_T_rec == 1){
-      // Must have at least 1 Ecov and a valid temperature column
-      if(n_Ecov > 0 && Ecov_rec_T_col >= 0 && Ecov_rec_T_col < n_Ecov){
-        
-        // Must actually be using Ecov for recruitment for at least one stock
-        // (otherwise Gaussian overwriting does nothing biologically)
-        int n_used = 0;
-        for(int s = 0; s < n_stocks; s++){
-          if(Ecov_how_R(Ecov_rec_T_col, s) > 0) n_used++;
+        for(int y = 0; y < n_years_pop; y++) {
+          Ecov_out_R_s(y,i) = Ecov_out_R(s,y,i);
         }
-        if(n_used > 0) gauss_rec_active = true;
+        for(int j = 0; j < max_n_poly_R; j++) {
+          Ecov_beta_R_s(i,j) = Ecov_beta_R(s,i,j);
+        }
+      }
+      
+      matrix<Type> Ecov_lm_R_s = get_Ecov_lm(Ecov_beta_R_s, Ecov_out_R_s,
+                                             n_years_model, n_years_proj,
+                                             n_poly_Ecov_R_s);
+      
+      for(int y = 0; y < n_years_pop; y++) {
+        for(int i = 0; i < n_Ecov; i++) {
+          Ecov_lm_R(s,y,i) = Ecov_lm_R_s(y,i);
+        }
       }
     }
     
-    // Optional: strict mode (recommended) - throw an error if user asked for Gaussian but it's not applicable
-    // if(use_gauss_T_rec == 1 && !gauss_rec_active){
-    //   error("use_gauss_T_rec=1 but Gaussian recruitment effect is not applicable: check n_Ecov, Ecov_rec_T_col, and Ecov_how_R for that Ecov column.");
-    // }
-    
-    // --- Gaussian temperature effect on log-recruitment (overwrites one Ecov column) ---
-    // if(use_gauss_T_rec == 1){
-    //   for(int s = 0; s < n_stocks; s++){
-    //     for(int y = 0; y < n_years_pop; y++){
-    //       Type T = Ecov_out_R(s, y, Ecov_rec_T_col); // temperature Ecov (on original scale)
-    //       // log_T_gauss_rec is defined in ecov.hpp
-    //       Ecov_lm_R(s, y, Ecov_rec_T_col) =
-    //         beta_T_rec(s) * log_T_gauss_rec(T, Topt_rec, log_width_rec);
-    //     }
-    //   }
-    // }
-    
-    if(gauss_rec_active){
+    // Gaussian overwrite for selected temperature Ecov
+    if(use_gauss_T_rec == 1 &&
+       n_Ecov > 0 &&
+       Ecov_rec_T_col >= 0 &&
+       Ecov_rec_T_col < n_Ecov){
+      
       for(int s = 0; s < n_stocks; s++){
+        Ecov_how_R(Ecov_rec_T_col, s) = 1;
+        
         for(int y = 0; y < n_years_pop; y++){
           Type T = Ecov_out_R(s, y, Ecov_rec_T_col);
           Ecov_lm_R(s, y, Ecov_rec_T_col) =
@@ -482,7 +463,6 @@ Type objective_function<Type>::operator() ()
       }
     }
     
-    //see(Ecov_lm_R)
     REPORT(Ecov_lm_R);
   }
   ///////////////////////
